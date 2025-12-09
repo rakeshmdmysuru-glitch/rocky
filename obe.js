@@ -1029,7 +1029,7 @@ function printAll() {
   const chartImage = chartCanvas ? chartCanvas.toDataURL("image/png") : "";
 
   const elementsToPrint = [
-   `<img src="jssstu_header.jpg" style="width:100%; display:block; margin:auto;" />`,
+    `<img src="jssstu_header.jpg" style="width:100%; display:block; margin:auto;" />`,
     buildGridPrintLayout(),
     `<h2 class="section-title">CIE</h2>`,
     cloneElementHTML(document.getElementById("uploadedTableCIE")),
