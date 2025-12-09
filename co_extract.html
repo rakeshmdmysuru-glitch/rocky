@@ -50,6 +50,12 @@
     <!-- Buttons -->
     <div class="text-center mt-3">
       <button class="btn btn-primary btn-lg px-4" onclick="computeCOs()">Compute CO Results</button>
+<div style="padding:8px; background:#f0f8ff; border-left:4px solid #0077cc; margin-bottom:10px;">
+  <b>Note:</b> Upload any Excel file having student <b>USN</b> and <b>Name</b>.
+</div>
+<input type="file" id="detailsFile" />
+<button class="btn btn-primary btn-lg px-4" onclick="addNameColumn()">Add Student Names</button>
+
       <button class="btn btn-success btn-lg px-4 ms-3" onclick="exportToExcel()">Export to Excel</button>
     </div>
 
