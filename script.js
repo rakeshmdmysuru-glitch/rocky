@@ -83,3 +83,47 @@ function exportToExcel() {
   const workbook = XLSX.utils.table_to_book(table, { sheet: "CO Results" });
   XLSX.writeFile(workbook, "CO_Results.xlsx");
 }
+
+let studentDetails = [];
+
+document.getElementById("detailsFile").addEventListener("change", function(e){
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const workbook = XLSX.read(evt.target.result, { type: "array" });
+    studentDetails = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    alert("Details Excel loaded!");
+  };
+  reader.readAsArrayBuffer(e.target.files[0]);
+});
+function addNameColumn(){
+  const table = document.querySelector("#output table");
+  if (!table) {
+    alert("Compute CO results first!");
+    return;
+  }
+
+  // ================= Add SLNO column at first position =================
+  const headerRow = table.rows[0];
+  headerRow.insertCell(0).outerHTML = "<th>SLNO</th>";
+
+  for (let i = 1; i < table.rows.length; i++) {
+    table.rows[i].insertCell(0).innerText = i;  // Auto numbering
+  }
+
+  // ================= Insert NAME after USN column =================
+  const updatedHeaderRow = table.rows[0];
+  // Recalculate USN column index AFTER adding SLNO
+  const usnIndex = Array.from(updatedHeaderRow.cells)
+                        .findIndex(c => c.innerText === "student_usno");
+
+  updatedHeaderRow.insertCell(usnIndex + 1).outerHTML = "<th>NAME</th>";
+
+  for (let i = 1; i < table.rows.length; i++) {
+    const usn = table.rows[i].cells[usnIndex].innerText;  // Correct position
+    const match = studentDetails.find(s => s.USN === usn);
+    const nameValue = match ? match["NAME OF THE STUDENT"] : "";
+    table.rows[i].insertCell(usnIndex + 1).innerText = nameValue;
+  }
+
+  alert("SLNO & Names added successfully!");
+}
