@@ -131,7 +131,7 @@ function computeCOs(){
       COscores[`CO${co}`] += Math.max(m1,m2);
     });
 
-    results.push({student_usno: student.student_usno, NAME: student.NAME || "", SECTION: student.Section, ...COscores});
+    results.push({student_usno: student.roll_num, NAME: student.NAME || "", SECTION: student.Section, ...COscores});
   });
 
   displayResult(results);
