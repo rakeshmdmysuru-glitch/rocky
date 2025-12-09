@@ -50,6 +50,7 @@
     <h4 class="mt-4 fw-semibold">Enter CO Mapping for Q1 to Q15</h4>
 
     <!-- CO Table -->
+
     <table class="table table-bordered table-hover table-sm mt-3">
       <thead class="table-dark">
         <tr>
@@ -82,10 +83,12 @@
 
       <button class="btn btn-success btn-lg px-4 ms-3" onclick="exportToExcel()">Export to Excel</button>
     </div>
+<select id="sectionFilter">
+  <option value="ALL">ALL</option>
+</select>
 
-    <hr class="my-4">
 
-    <!-- Results Area -->
+    
     <div id="output" class="table-responsive"></div>
   </div>
 </div>
