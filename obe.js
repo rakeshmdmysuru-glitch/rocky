@@ -1206,55 +1206,73 @@ function matchSEEwithCIE() {
     }
 
     // Remove previous highlights
-    [...cieTable.querySelectorAll("tbody tr")].forEach(row => row.classList.remove("sno-error"));
+    [...cieTable.querySelectorAll("tbody tr")].forEach(row => row.classList.remove("sno-error", "missing-in-see"));
     [...seeTable.querySelectorAll("tbody tr")].forEach(row => row.classList.remove("to-delete", "sno-error"));
 
-    // --- 1. Highlight SEE rows not in CIE ---
+    // --- 1. Collect USNs ---
     const cieUSNs = new Set(
         [...cieTable.querySelectorAll("tbody tr")].map(row =>
             row.children[1]?.textContent.trim().toUpperCase()
         )
     );
 
-    let usnMismatchFound = false;
+    const seeUSNs = new Set(
+        [...seeTable.querySelectorAll("tbody tr")].map(row =>
+            row.children[1]?.textContent.trim().toUpperCase()
+        )
+    );
 
+    // --- 2. Highlight SEE rows not in CIE ---
+    let usnMismatchSEE = false;
     [...seeTable.querySelectorAll("tbody tr")].forEach(row => {
         const usn = row.children[1]?.textContent.trim().toUpperCase();
         if (!cieUSNs.has(usn)) {
-            row.classList.add("to-delete"); // Highlight missing in CIE
-            usnMismatchFound = true;
+            row.classList.add("to-delete");
+            usnMismatchSEE = true;
         }
     });
 
-    // --- 2. Check Serial Number continuity in CIE ---
+    // --- 3. Highlight CIE rows not in SEE ---
+    let usnMismatchCIE = false;
+    [...cieTable.querySelectorAll("tbody tr")].forEach(row => {
+        const usn = row.children[1]?.textContent.trim().toUpperCase();
+        if (!seeUSNs.has(usn)) {
+            row.classList.add("missing-in-see"); // highlight missing in SEE
+            usnMismatchCIE = true;
+        }
+    });
+
+    // --- 4. Check Serial Number continuity in CIE ---
     let prevSno = 0;
     let snoMismatchFound = false;
     [...cieTable.querySelectorAll("tbody tr")].forEach(row => {
         const sno = parseInt(row.children[0]?.textContent.trim());
         if (isNaN(sno) || sno !== prevSno + 1) {
-            row.classList.add("sno-error"); // Highlight S.No. mismatch
+            row.classList.add("sno-error");
             snoMismatchFound = true;
         }
         prevSno = isNaN(sno) ? prevSno : sno;
     });
 
-    // --- 3. Check Serial Number continuity in SEE ---
+    // --- 5. Check Serial Number continuity in SEE ---
     prevSno = 0;
     [...seeTable.querySelectorAll("tbody tr")].forEach(row => {
         const sno = parseInt(row.children[0]?.textContent.trim());
         if (isNaN(sno) || sno !== prevSno + 1) {
-            row.classList.add("sno-error"); // Highlight S.No. mismatch
+            row.classList.add("sno-error");
             snoMismatchFound = true;
         }
         prevSno = isNaN(sno) ? prevSno : sno;
     });
 
-    // --- 4. Alert user if any issues found ---
-    if (usnMismatchFound) {
-        alert("USN mismatch detected in SEE table. Please correct the document and re-upload.");
-    }
-    if (snoMismatchFound) {
-        alert("Serial number mismatch detected in tables. Please correct the document and re-upload.");
+    // --- 6. Alert user ---
+    let alertMsg = "";
+    if (usnMismatchSEE) alertMsg += "USN(s) in SEE not found in CIE.\n";
+    if (usnMismatchCIE) alertMsg += "USN(s) in CIE not found in SEE.\n";
+    if (snoMismatchFound) alertMsg += "Serial number mismatch detected.\n";
+
+    if (alertMsg) {
+        alert(alertMsg + "Please correct the document(s) and re-upload.");
     }
 }
 
