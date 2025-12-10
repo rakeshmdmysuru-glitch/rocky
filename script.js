@@ -230,45 +230,46 @@ function addNameColumn() {
   }
 
   const headerRow = table.rows[0];
+  const getText = (c) => c.innerText.trim().toLowerCase();
 
-  // Add SLNO only if not present
-  if (!Array.from(headerRow.cells).some(c => c.innerText === "SLNO")) {
+  // Find indexes (case-insensitive)
+  const usnIndex = Array.from(headerRow.cells).findIndex(c => getText(c) === "student_usno" || getText(c) === "usn");
+  let nameIndex = Array.from(headerRow.cells).findIndex(c => getText(c) === "name");
+  const sectionIndex = Array.from(headerRow.cells).findIndex(c => getText(c) === "section");
+
+  // ------------ ADD SLNO IF NOT PRESENT ------------
+  if (!Array.from(headerRow.cells).some(c => getText(c) === "slno")) {
     headerRow.insertCell(0).outerHTML = "<th>SLNO</th>";
     for (let i = 1; i < table.rows.length; i++) {
-      table.rows[i].insertCell(0).innerText = i; // Auto numbering
+      table.rows[i].insertCell(0).innerText = i;
     }
   }
 
-  // Add NAME only if not present
-  const usnIndex = Array.from(headerRow.cells)
-                        .findIndex(c => c.innerText === "student_usno");
-  if (usnIndex !== -1 && !Array.from(headerRow.cells).some(c => c.innerText === "NAME")) {
+  // Update indexes because SLNO insertion shifts columns
+  nameIndex = Array.from(headerRow.cells).findIndex(c => getText(c) === "name");
+
+  // ------------ ADD/UPDATE NAME COLUMN ------------
+  if (usnIndex !== -1 && nameIndex === -1) {
     headerRow.insertCell(usnIndex + 1).outerHTML = "<th>NAME</th>";
+    nameIndex = usnIndex + 1;
+
     for (let i = 1; i < table.rows.length; i++) {
-      const usn = table.rows[i].cells[usnIndex].innerText;
-      const match = studentDetails.find(s => s.USN === usn);
-      const nameValue = match ? match["NAME OF THE STUDENT"] : "";
-      table.rows[i].insertCell(usnIndex + 1).innerText = nameValue;
+      const usn = table.rows[i].cells[usnIndex].innerText.trim();
+      const match = studentDetails.find(s => (s.USN || "").trim().toLowerCase() === usn.toLowerCase());
+      const nameValue = match ? (match.NAME || match["NAME OF STUDENT"] || "") : "";
+      table.rows[i].insertCell(nameIndex).innerText = nameValue;
     }
-  } else {
-    // If NAME column already exists, just fill the values from studentDetails
-    const nameIndex = Array.from(headerRow.cells)
-                           .findIndex(c => c.innerText === "NAME");
-    if (nameIndex !== -1) {
-      for (let i = 1; i < table.rows.length; i++) {
-        const usn = table.rows[i].cells[usnIndex].innerText;
-        const match = studentDetails.find(s => s.USN === usn);
-        table.rows[i].cells[nameIndex].innerText = match ? match["NAME OF THE STUDENT"] : "";
-      }
+  } 
+  else if (nameIndex !== -1) {
+    for (let i = 1; i < table.rows.length; i++) {
+      const usn = table.rows[i].cells[usnIndex].innerText.trim();
+      const match = studentDetails.find(s => (s.USN || "").trim().toLowerCase() === usn.toLowerCase());
+      table.rows[i].cells[nameIndex].innerText = match ? (match.NAME || match["NAME OF STUDENT"] || "") : "";
     }
   }
 
-  // Move SECTION after NAME if needed
-  const sectionIndex = Array.from(headerRow.cells)
-                            .findIndex(c => c.innerText === "SECTION");
-  const nameIndex = Array.from(headerRow.cells)
-                         .findIndex(c => c.innerText === "NAME");
-  if (sectionIndex > nameIndex) {
+  // ------------ MOVE SECTION NEXT TO NAME ------------
+  if (sectionIndex > nameIndex && sectionIndex !== -1) {
     for (let i = 0; i < table.rows.length; i++) {
       const row = table.rows[i];
       const sectionCell = row.cells[sectionIndex];
@@ -276,5 +277,26 @@ function addNameColumn() {
     }
   }
 
-  alert("SLNO, NAME & SECTION columns arranged successfully!");
+  // ------------ SORT ROWS: NAME first, blanks last ------------
+  let rows = Array.from(table.rows).slice(1); // skip header
+
+  rows.sort((a, b) => {
+    const nameA = a.cells[nameIndex].innerText.trim();
+    const nameB = b.cells[nameIndex].innerText.trim();
+
+    if (nameA && !nameB) return -1; // name first
+    if (!nameA && nameB) return 1;  // blanks last
+
+    return nameA.localeCompare(nameB);
+  });
+
+  // Reattach sorted rows
+  const tbody = table.tBodies[0];
+  rows.forEach((r, i) => {
+    tbody.appendChild(r);
+    r.cells[0].innerText = i + 1; // refresh SLNO
+  });
+
+  alert("NAME-filled rows arranged first successfully!");
 }
+
