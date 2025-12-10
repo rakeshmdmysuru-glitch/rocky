@@ -1196,6 +1196,67 @@ let html = `
 }
 
 
+function matchSEEwithCIE() {
+    const cieTable = document.querySelector("#uploadedTableCIE table");
+    const seeTable = document.querySelector("#uploadedTableSEE table");
 
+    if (!cieTable || !seeTable) {
+        console.error("Tables not found!");
+        return;
+    }
 
+    // Remove previous highlights
+    [...cieTable.querySelectorAll("tbody tr")].forEach(row => row.classList.remove("sno-error"));
+    [...seeTable.querySelectorAll("tbody tr")].forEach(row => row.classList.remove("to-delete", "sno-error"));
 
+    // --- 1. Highlight SEE rows not in CIE ---
+    const cieUSNs = new Set(
+        [...cieTable.querySelectorAll("tbody tr")].map(row =>
+            row.children[1]?.textContent.trim().toUpperCase()
+        )
+    );
+
+    let usnMismatchFound = false;
+
+    [...seeTable.querySelectorAll("tbody tr")].forEach(row => {
+        const usn = row.children[1]?.textContent.trim().toUpperCase();
+        if (!cieUSNs.has(usn)) {
+            row.classList.add("to-delete"); // Highlight missing in CIE
+            usnMismatchFound = true;
+        }
+    });
+
+    // --- 2. Check Serial Number continuity in CIE ---
+    let prevSno = 0;
+    let snoMismatchFound = false;
+    [...cieTable.querySelectorAll("tbody tr")].forEach(row => {
+        const sno = parseInt(row.children[0]?.textContent.trim());
+        if (isNaN(sno) || sno !== prevSno + 1) {
+            row.classList.add("sno-error"); // Highlight S.No. mismatch
+            snoMismatchFound = true;
+        }
+        prevSno = isNaN(sno) ? prevSno : sno;
+    });
+
+    // --- 3. Check Serial Number continuity in SEE ---
+    prevSno = 0;
+    [...seeTable.querySelectorAll("tbody tr")].forEach(row => {
+        const sno = parseInt(row.children[0]?.textContent.trim());
+        if (isNaN(sno) || sno !== prevSno + 1) {
+            row.classList.add("sno-error"); // Highlight S.No. mismatch
+            snoMismatchFound = true;
+        }
+        prevSno = isNaN(sno) ? prevSno : sno;
+    });
+
+    // --- 4. Alert user if any issues found ---
+    if (usnMismatchFound) {
+        alert("USN mismatch detected in SEE table. Please correct the document and re-upload.");
+    }
+    if (snoMismatchFound) {
+        alert("Serial number mismatch detected in tables. Please correct the document and re-upload.");
+    }
+}
+
+// Run after tables appear
+setTimeout(matchSEEwithCIE, 500);
