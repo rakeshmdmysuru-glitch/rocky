@@ -62,6 +62,23 @@ body{
 .sno-error {
     background-color: #fff2b3; /* yellow for S.No. mismatch */
 }
+
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+html, body {
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media print {
+  body {
+    -webkit-transform: none !important;
+  }
+}
+
  </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
