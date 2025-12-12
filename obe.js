@@ -1397,3 +1397,23 @@ function insertNamesIntoSEE() {
 }
 
 
+window.onload = function () {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.get("from") === "coextract") {
+        // Run your method
+        loadCOResults();
+
+        // Replace URL so parameters disappear without reloading twice
+        window.history.replaceState({}, document.title, "obe.html");
+
+        // OPTIONAL: If you need an actual reload:
+        // location.reload();
+    }
+};
+
+function loadCOResults() {
+    console.log("CO Results Loaded");
+    // your logic here
+}
+
