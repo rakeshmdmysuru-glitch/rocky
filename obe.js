@@ -1395,3 +1395,11 @@ function insertNamesIntoSEE() {
 
     alert("Names inserted successfully!");
 }
+
+
+window.addEventListener("load", function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") === "coextract") {
+        loadResults(); // run automatically only on redirect
+    }
+});
