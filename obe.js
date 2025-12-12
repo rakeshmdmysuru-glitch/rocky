@@ -1297,9 +1297,9 @@ function loadCOResults() {
     filterSEEByName();        // 2. Remove name-not-found rows
     reorderSEE_SLNO();        // ⭐ 3. Reorder serial numbers
     processFinalSEE();        // 4. Convert to AOA & compute summary
-window.history.replaceState({}, document.title, "obe.html");
-};
+//window.location.reload();
 
+window.history.replaceState({}, document.title, "obe.html");
 }
 
 function filterSEEByName() {
