@@ -340,5 +340,6 @@ function sendResultsBackWithoutSection() {
 
     alert("Results saved WITHOUT SECTION! Redirecting…")
     // ⭐⭐⭐ Redirect to OBE page
-    window.location.href = "obe.html";
+    //window.location.href = "obe.html";
+window.location.href = "obe.html?from=coextract";
 }
