@@ -152,6 +152,10 @@ html, body {
     <button id="parseFileSEE">Parse & Compute SEE</button>
     <!-- <button id="printReportSEE" style="margin-left:8px">Print SEE</button>-->
   </div>
+<button onclick="loadCOResults()">Load SEE Results</button>
+
+
+
   <div id="uploadedTableSEE" class="result-block"></div>
   <div id="summaryTableSEE" class="result-block"></div>
 
@@ -168,12 +172,12 @@ html, body {
 
     <div>
       <label for="cieWeight">CIE Weight (%)</label><br>
-      <input id="cieWeight" type="number" min="0" max="100" value="50">
+      <input id="cieWeight" type="number" min="0" max="100" value="40">
     </div>
 
     <div>
       <label for="seeWeight">SEE Weight (%)</label><br>
-      <input id="seeWeight" type="number" min="0" max="100" value="50">
+      <input id="seeWeight" type="number" min="0" max="100" value="60">
     </div>
 
     <div>

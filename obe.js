@@ -339,10 +339,12 @@ window.addEventListener('DOMContentLoaded', () => {
    Reset All (clear both storages and UI)
    ========================= */
 $('resetAll').addEventListener('click', ()=>{
-  if(!confirm('Clear all stored data (localStorage + localStorage)?')) return;
+  if(!confirm('Clear all stored data ?')) return;
   localStorage.clear();
   localStorage.removeItem(KEY_CIE);
   localStorage.removeItem(KEY_SEE);
+  localStorage.removeItem("CO_RESULTS");
+
   // clear inputs
   FIELD_IDS.forEach(id => { if($(id)) $(id).value = ''; });
   // clear target containers + results
@@ -1278,3 +1280,118 @@ function matchSEEwithCIE() {
 
 // Run after tables appear
 setTimeout(matchSEEwithCIE, 500);
+
+
+
+function loadCOResults() {
+
+    const saved = localStorage.getItem("CO_RESULTS");
+    if (!saved) {
+        alert("No SEE results found!");
+        return;
+    }
+
+    document.getElementById("uploadedTableSEE").innerHTML = saved;
+
+    insertNamesIntoSEE();     // 1. Insert names
+    filterSEEByName();        // 2. Remove name-not-found rows
+    reorderSEE_SLNO();        // ⭐ 3. Reorder serial numbers
+    processFinalSEE();        // 4. Convert to AOA & compute summary
+window.location.reload();
+
+}
+
+function filterSEEByName() {
+    const seeTable = document.querySelector("#uploadedTableSEE table");
+    if (!seeTable) return;
+
+    // Start from row 1 → skip header
+    for (let i = seeTable.rows.length - 1; i >= 1; i--) {
+        const name = seeTable.rows[i].cells[2].innerText.trim();
+        if (name === "" || name === "NOT FOUND") {
+            seeTable.deleteRow(i);
+        }
+    }
+
+   // alert("Removed SEE rows without matching names.");
+}
+function processFinalSEE() {
+    const seeTable = document.querySelector("#uploadedTableSEE table");
+    if (!seeTable) return;
+
+    let aoa = [];
+
+    // Header row
+    const headerRow = [];
+    for (let c = 0; c < seeTable.rows[0].cells.length; c++) {
+        headerRow.push(seeTable.rows[0].cells[c].innerText.trim());
+    }
+    aoa.push(headerRow);
+
+    // Data rows
+    for (let r = 1; r < seeTable.rows.length; r++) {
+        const row = [];
+        for (let c = 0; c < seeTable.rows[r].cells.length; c++) {
+            row.push(seeTable.rows[r].cells[c].innerText.trim());
+        }
+        aoa.push(row);
+    }
+
+    // Now run your existing SEE processing
+    processAOA("SEE", aoa);
+
+    alert("SEE summary computed and stored successfully!");
+}
+function reorderSEE_SLNO() {
+    const seeTable = document.querySelector("#uploadedTableSEE table");
+    if (!seeTable) return;
+
+    // Start from row 1 (skip header)
+    let slno = 1;
+    for (let r = 1; r < seeTable.rows.length; r++) {
+        seeTable.rows[r].cells[0].innerText = slno;
+        slno++;
+    }
+}
+
+
+function insertNamesIntoSEE() {
+
+    const cieTable = document.querySelector("#uploadedTableCIE table");
+    const seeTable = document.querySelector("#uploadedTableSEE table");
+
+    if (!cieTable || !seeTable) {
+        alert("Tables not found on page!");
+        return;
+    }
+
+    // ----- BUILD USN → NAME MAPPING FROM CIE -----
+    const usnToName = {};
+
+    for (let i = 1; i < cieTable.rows.length; i++) {
+        const row = cieTable.rows[i];
+
+        const cieUSN = row.cells[1]?.innerText.trim();     // USN
+        const cieName = row.cells[2]?.innerText.trim();    // NAME OF STUDENT
+
+        if (cieUSN) {
+            usnToName[cieUSN.toLowerCase()] = cieName;
+        }
+    }
+
+    // ----- INSERT NAMES INTO SEE -----
+    for (let i = 1; i < seeTable.rows.length; i++) {
+        const row = seeTable.rows[i];
+
+        const seeUSN = row.cells[1]?.innerText.trim().toLowerCase(); // student_usno
+        const nameCell = row.cells[2];                               // NAME
+
+        if (seeUSN && usnToName[seeUSN]) {
+            nameCell.innerText = usnToName[seeUSN];
+        } else {
+            nameCell.innerText = "";  // you can put NOT FOUND if you want
+        }
+    }
+
+    alert("Names inserted successfully!");
+}

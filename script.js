@@ -14,7 +14,7 @@ document.getElementById("excelFile").addEventListener("change", function(e){
 });
 
 // ================= Upload details Excel =================
-document.getElementById("detailsFile").addEventListener("change", function(e){
+/*document.getElementById("detailsFile").addEventListener("change", function(e){
   const reader = new FileReader();
   reader.onload = evt => {
     const workbook = XLSX.read(evt.target.result, { type: "array" });
@@ -22,7 +22,7 @@ document.getElementById("detailsFile").addEventListener("change", function(e){
     alert("Details Excel loaded!");
   };
   reader.readAsArrayBuffer(e.target.files[0]);
-});
+});*/
 
 // ================= Populate SECTION Dropdown =================
 function populateSectionDropdown() {
@@ -300,3 +300,45 @@ function addNameColumn() {
   alert("NAME-filled rows arranged first successfully!");
 }
 
+
+
+
+
+
+
+
+
+function sendResultsBackWithoutSection() {
+    let table = document.querySelector("#output table");
+    if (!table) {
+        alert("Compute results first!");
+        return;
+    }
+
+    let clone = table.cloneNode(true);
+
+    // Find "SECTION" column
+    let headers = clone.rows[0].cells;
+    let sectionIndex = -1;
+
+    for (let i = 0; i < headers.length; i++) {
+        if (headers[i].innerText.trim().toUpperCase() === "SECTION") {
+            sectionIndex = i;
+            break;
+        }
+    }
+
+    // Remove SECTION column
+    if (sectionIndex !== -1) {
+        for (let i = 0; i < clone.rows.length; i++) {
+            clone.rows[i].deleteCell(sectionIndex);
+        }
+    }
+
+    // Save cleaned table
+    localStorage.setItem("CO_RESULTS", clone.outerHTML);
+
+    alert("Results saved WITHOUT SECTION! Redirecting…")
+    // ⭐⭐⭐ Redirect to OBE page
+    window.location.href = "obe.html";
+}
