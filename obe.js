@@ -1407,8 +1407,9 @@ window.onload = function () {
         // Run your method
         loadCOResults();
 
+
         // Replace URL so parameters disappear without reloading twice
-        window.history.replaceState({}, document.title, "obe.html");
+       // window.history.replaceState({}, document.title, "obe.html");
 
         // OPTIONAL: If you need an actual reload:
         // location.reload();
