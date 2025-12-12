@@ -1397,9 +1397,18 @@ function insertNamesIntoSEE() {
 }
 
 
-window.addEventListener("load", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOMContentLoaded fired");
+
     const params = new URLSearchParams(window.location.search);
-    if (params.get("from") === "coextract") {
-        loadCOResults(); // run automatically only on redirect
+    const from = params.get("from");
+
+    console.log("URL param:", from);
+
+    if (from === "coextract") {
+        console.log("Running loadResults() automatically");
+        loadCOResults();
+    } else {
+        console.log("Not running — param missing or different");
     }
 });
