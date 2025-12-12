@@ -1400,6 +1400,6 @@ function insertNamesIntoSEE() {
 window.addEventListener("load", function () {
     const params = new URLSearchParams(window.location.search);
     if (params.get("from") === "coextract") {
-        loadResults(); // run automatically only on redirect
+        loadCOResults(); // run automatically only on redirect
     }
 });
