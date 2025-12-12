@@ -1340,7 +1340,7 @@ function processFinalSEE() {
     // Now run your existing SEE processing
     processAOA("SEE", aoa);
 
-    alert("SEE summary computed and stored successfully!");
+    //alert("SEE summary computed and stored successfully!");
 }
 function reorderSEE_SLNO() {
     const seeTable = document.querySelector("#uploadedTableSEE table");
