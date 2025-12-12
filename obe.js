@@ -1297,9 +1297,9 @@ function loadCOResults() {
     filterSEEByName();        // 2. Remove name-not-found rows
     reorderSEE_SLNO();        // ⭐ 3. Reorder serial numbers
     processFinalSEE();        // 4. Convert to AOA & compute summary
-//window.location.reload();
+window.location.reload();
 
-window.history.replaceState({}, document.title, "obe.html");
+//window.history.replaceState({}, document.title, "obe.html");
 }
 
 function filterSEEByName() {
@@ -1401,23 +1401,3 @@ function insertNamesIntoSEE() {
 
 
 
-window.onload = function () {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    if (urlParams.get("from") === "coextract") {
-        // Run your method
-        loadCOResults();
-
-
-        // Replace URL so parameters disappear without reloading twice
-       // window.history.replaceState({}, document.title, "obe.html");
-
-        // OPTIONAL: If you need an actual reload:
-        // location.reload();
-    }
-};
-
-function loadCOResults() {
-    console.log("CO Results Loaded");
-    // your logic here
-}
