@@ -60,19 +60,35 @@
         </tr>
       </thead>
       <tbody>
-        <script>
-          for(let i=1;i<=15;i++){
-            document.write(`
-              <tr>
-                <td class="fw-bold">Q${i}</td>
-                <td><input type="number" id="co_Q${i}" min="1" max="10" placeholder="Enter CO value" class="form-control" /></td>
-              </tr>
-            `);
-          }
-        </script>
+          <script>
+    // create the 15 rows with inputs
+    for (let i = 1; i <= 15; i++) {
+      document.write(`
+        <tr>
+          <td class="fw-bold">Q${i}</td>
+          <td>
+            <input type="number" id="co_Q${i}" min="1" max="10"
+                   class="form-control" />
+          </td>
+        </tr>
+      `);
+    }
+  </script>
       </tbody>
     </table>
 
+<script>
+  // default values you want to auto-fill
+  const defaultValues = "123451122334455".split(""); 
+  // converts into: ["1","2","3","4","5","1","1","2","2","3","3","4","4","5","5"]
+
+  window.onload = function() {
+    for (let i = 1; i <= 15; i++) {
+      const input = document.getElementById(`co_Q${i}`);
+      input.value = defaultValues[i - 1];
+    }
+  };
+</script>
     <!-- Buttons -->
     <div class="text-center mt-3">
       <button class="btn btn-primary btn-lg px-4" onclick="computeCOs()">Compute CO Results</button>
