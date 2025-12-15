@@ -162,11 +162,58 @@ function displayResult(data){
 
   html += "</tbody></table>";
   document.getElementById("output").innerHTML = html;
+ saveTableToLocalStorage();
 
   // After table is rendered, populate SECTION dropdown
   populateSectionDropdown();
 }
 
+
+// ================= Display Results for all excel sheets =================
+/*function displayResult(data) {
+  if (data.length === 0) {
+    alert("No data to display");
+    return;
+  }
+
+  const output = document.getElementById("output");
+  let table = output.querySelector("table");
+
+  // ---------- CREATE TABLE IF NOT EXISTS ----------
+  if (!table) {
+    let html = "<table class='table table-bordered table-hover table-sm mt-3'>";
+    html += "<thead><tr><th>SLNO</th>";
+
+    const keys = Object.keys(data[0]);
+    keys.forEach(k => html += `<th>${k}</th>`);
+    html += "</tr></thead><tbody></tbody></table>";
+
+    output.innerHTML = html;
+    table = output.querySelector("table");
+  }
+
+  const tbody = table.querySelector("tbody");
+  const existingRows = tbody.rows.length;
+  const keys = Object.keys(data[0]);
+
+  // ---------- APPEND ROWS ----------
+  data.forEach((row, i) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `<td>${existingRows + i + 1}</td>`;
+    keys.forEach(k => {
+      tr.innerHTML += `<td>${row[k]}</td>`;
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  // ✅ SAVE AFTER APPEND
+  saveTableToLocalStorage();
+
+  populateSectionDropdown();
+}
+*/
 // ================= Export to Excel =================
 function exportToExcel() {
   const table = document.querySelector("#output table");
@@ -342,4 +389,39 @@ function sendResultsBackWithoutSection() {
     // ⭐⭐⭐ Redirect to OBE page
     window.location.href = "obe.html";
 //window.location.href = "obe.html?from=coextract";
+}
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const outputDiv = document.getElementById("output");
+    const savedTable = localStorage.getItem("CO_EXAM_RESULTS");
+
+    if (savedTable) {
+        outputDiv.innerHTML = savedTable;
+    } else {
+        outputDiv.innerHTML = "<p>No results found.</p>";
+    }
+});
+
+
+
+document.getElementById("resetBtn").addEventListener("click", function () {
+    if (confirm("Are you sure you want to reset the stored results?")) {
+        localStorage.removeItem("CO_EXAM_RESULTS");
+        document.getElementById("output").innerHTML = "";
+        alert("Stored results cleared!");
+    }
+});
+
+
+function saveTableToLocalStorage() {
+  const table = document.querySelector("#output table");
+  if (table) {
+    localStorage.setItem("CO_EXAM_RESULTS", table.outerHTML);
+  }
 }
