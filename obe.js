@@ -825,58 +825,60 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
     for (let co = 1; co <= numCOs; co++) {
         const finalCO = Number(finalArr[co - 1]) || 0;
         let row = `<tr><td>CO${co} (${finalCO.toFixed(3)}%)</td>`;
+
         PO_LIST.forEach(po => {
             const key = `map_${po}_co${co}`;
             const level = Number(localStorage.getItem(key) || 0);
             const multiplied = ((finalCO / 100) * level).toFixed(2); // scaled to 0–3
             row += `<td>${multiplied}</td>`;
         });
+
         row += "</tr>";
         table.innerHTML += row;
     }
 
     // AVG MAPPING ROW
     // AVG MAPPING ROW (average of multiplied CO×PO values, 2 decimal places)
-let avgRow = "<tr><td><b>Avg Mapping</b></td>";
+    let avgRow = "<tr><td><b>Avg Mapping</b></td>";
 
-PO_LIST.forEach((po, index) => {
-   /* let sum = 0;
+    PO_LIST.forEach((po, index) => {
 
-    for (let co = 1; co <= numCOs; co++) {
-        const finalCO = Number(finalArr[co - 1]) || 0;
-        const key = `map_${po}_co${co}`;
-        const level = Number(localStorage.getItem(key) || 0);
+        /*
+        // ❌ OLD LOGIC (dividing by total COs)
+        let sum = 0;
 
-        sum += (finalCO / 100) * level; // multiplied value
+        for (let co = 1; co <= numCOs; co++) {
+            const finalCO = Number(finalArr[co - 1]) || 0;
+            const key = `map_${po}_co${co}`;
+            const level = Number(localStorage.getItem(key) || 0);
 
-    }
+            sum += (finalCO / 100) * level; // multiplied value
+        }
 
-    const avg = (sum / numCOs).toFixed(2); // round to 2 decimals */
+        const avg = (sum / numCOs).toFixed(2); // round to 2 decimals
+        */
 
-let sum = 0;
-let count = 0;
+        // ✅ NEW LOGIC (divide only by entered COs)
+        let sum = 0;
+        let count = 0;
 
-for (let co = 1; co <= numCOs; co++) {
-    const finalCO = Number(finalArr[co - 1]) || 0;
-    const key = `map_${po}_co${co}`;
-    const level = Number(localStorage.getItem(key)) || 0;
+        for (let co = 1; co <= numCOs; co++) {
+            const finalCO = Number(finalArr[co - 1]) || 0;
+            const key = `map_${po}_co${co}`;
+            const level = Number(localStorage.getItem(key)) || 0;
 
-    if (level > 0) {
-        sum += (finalCO / 100) * level;
-        count++;
-    }
-}
+            if (level > 0) {
+                sum += (finalCO / 100) * level;
+                count++;
+            }
+        }
 
-const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
+        const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
+        avgRow += `<td>${avg}</td>`;
+    });
 
-
-
-    avgRow += `<td>${avg}</td>`;
-});
-
-avgRow += "</tr>";
-table.innerHTML += avgRow;
-
+    avgRow += "</tr>";
+    table.innerHTML += avgRow;
 
     // EXPECTED PO ROW
     let expectedRow = "<tr><td><b>Expected PO (%)</b></td>";
@@ -896,7 +898,6 @@ table.innerHTML += avgRow;
     finalRow += "</tr>";
     table.innerHTML += finalRow;
 }
-
 // ---------------------------------------------------------
 // MAIN CALCULATION — PO ATTAINMENT (percent version)
 // ---------------------------------------------------------
