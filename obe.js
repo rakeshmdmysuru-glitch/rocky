@@ -1059,6 +1059,10 @@ function printAll() {
   const chartCanvas = document.getElementById("poChart");
   const chartImage = chartCanvas ? chartCanvas.toDataURL("image/png") : "";
 
+const chartCanvas1 = document.getElementById("coChart");
+  const chartImage1 = chartCanvas1 ? chartCanvas1.toDataURL("image/png") : "";
+
+
   const elementsToPrint = [
     `<img src="jssstu_header.jpg" style="width:100%; display:block; margin:auto;" />`,
     buildGridPrintLayout(),
@@ -1073,7 +1077,7 @@ function printAll() {
     "PAGEBREAK",
     buildFooterCourseInfo(),
     cloneElementHTML(document.getElementById("resultsSection")),
-`<img src="${chartWrap}" style="width:100%; max-width:900px; display:block; margin:auto;" />`
+`<img src="${chartImage1}" style="width:100%; max-width:900px; display:block; margin:auto;" />`
  ,
     "PAGEBREAK",
     buildFooterCourseInfo(),
