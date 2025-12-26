@@ -760,6 +760,7 @@ function buildCOPOTable(numCOs) {
 // ---------------------------------------------------------
 // UPDATE AVERAGE ROW IN INPUT TABLE
 // ---------------------------------------------------------
+/* average of all cells 
 function updatePOColumnAverages() {
     const numCOs = GLOBAL_finalArr.length;
     let avgCells = document.querySelectorAll("#avgRow .avgCell");
@@ -773,6 +774,34 @@ function updatePOColumnAverages() {
         }
 
         const avg = numCOs ? (sum / numCOs).toFixed(2) : "0.00";
+        avgCells[index].textContent = avg;
+    });
+}
+*/
+
+
+//average of entered cells only
+
+
+function updatePOColumnAverages() {
+    const numCOs = GLOBAL_finalArr.length;
+    let avgCells = document.querySelectorAll("#avgRow .avgCell");
+
+    PO_LIST.forEach((po, index) => {
+        let sum = 0;
+        let count = 0; // number of entered CO values
+
+        for (let co = 1; co <= numCOs; co++) {
+            const key = `map_${po}_co${co}`;
+            const value = Number(localStorage.getItem(key));
+
+            if (value && value > 0) {   // consider only entered cells
+                sum += value;
+                count++;
+            }
+        }
+
+        const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
         avgCells[index].textContent = avg;
     });
 }
