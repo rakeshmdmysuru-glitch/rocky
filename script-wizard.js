@@ -385,10 +385,9 @@ function sendResultsBackWithoutSection() {
     // Save cleaned table
     localStorage.setItem("CO_RESULTS", clone.outerHTML);
 
-    alert("Results saved WITHOUT SECTION! Redirecting…")
+   // alert("Results saved WITHOUT SECTION! Redirecting…")
     // ⭐⭐⭐ Redirect to OBE page
-    window.location.href = "obe.html?step=3";
-
+    //window.location.href = "obe.html";
 //window.location.href = "obe.html?from=coextract";
 }
 
@@ -410,7 +409,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-
+/*
 document.getElementById("resetBtn").addEventListener("click", function () {
     if (confirm("Are you sure you want to reset the stored results?")) {
         localStorage.removeItem("CO_EXAM_RESULTS");
@@ -418,7 +417,7 @@ document.getElementById("resetBtn").addEventListener("click", function () {
         alert("Stored results cleared!");
     }
 });
-
+*/
 
 function saveTableToLocalStorage() {
   const table = document.querySelector("#output table");

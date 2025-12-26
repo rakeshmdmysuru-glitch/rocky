@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>OBE Calculation Sheet (CIE & SEE)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;max-width:1100px;margin:auto}
+    header{display:flex;align-items:center;gap:20px}
+    header img{height:80px}
+    h1{margin:0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}
+    label{font-weight:600;font-size:0.95rem}
+    input,select{padding:6px 8px;width:100%;box-sizing:border-box}
+    button{padding:8px 12px;margin-top:8px;cursor:pointer}
+    table{border-collapse:collapse;width:100%;margin-top:12px}
+    th,td{border:1px solid #ddd;padding:6px;text-align:center}
+    .co-targets{display:flex;gap:8px;flex-wrap:wrap}
+    .co-targets div{min-width:110px}
+    .section-title{margin-top:18px;font-weight:700}
+    .result-block{overflow:auto;margin-top:12px}
+    .controls{margin-top:10px}
+    hr{margin:20px 0}
+    @media print { input,button,select,#fileInputCIE,#fileInputSEE{display:none!important} }
+
+h1{margin-bottom:8px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    label{font-weight:600}
+    input[type="number"]{padding:6px;width:100px}
+    .co-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:center;margin-top:12px}
+    .co-grid .heading{font-weight:700;text-align:center}
+    .section{margin-top:18px;padding:12px;border:1px solid #ddd;border-radius:6px}
+    table{border-collapse:collapse;width:100%;margin-top:12px}
+    th,td{border:1px solid #ccc;padding:6px;text-align:center}
+    #chartWrap{width:100%;max-width:900px;margin-top:18px}
+    button{padding:8px 12px;margin-top:8px;cursor:pointer}
+    .small{font-size:0.9rem;color:#444}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    padding:20px;
+    max-width:1100px;
+    margin:auto;
+    margin-top:20px; /* prevents menu overlap */
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.to-delete {
+    background-color: #ffcccc; /* red for missing in CIE */
+}
+
+.missing-in-see {
+    background-color: #cce5ff; /* blue for missing in SEE */
+}
+
+.sno-error {
+    background-color: #fff2b3; /* yellow for S.No. mismatch */
+}
+
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+html, body {
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media print {
+  body {
+    -webkit-transform: none !important;
+  }
+}
+
+
+/* ===== Wizard visibility control ===== */
+.wizard-hide {
+  display: none !important;
+}
+/* Wizard progress colors */
+.progress-ok {
+  background:#004aad !important;
+}
+.progress-error {
+  background:#e53935 !important;
+}
+#output {
+  display: none !important;
+}
+.wizard-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+ </style>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+let currentStep = 1;
+const TOTAL_STEPS = 6; // 5 steps + final "show all"
+
+// Check if current step has empty inputs
+function hasEmptyInputs(step) {
+  if (step === 6) return false; // final step shows all
+
+  const container = document.getElementById("step" + step);
+  if (!container) return false;
+
+  const inputs = container.querySelectorAll("input, select");
+  if (inputs.length === 0) return false; // no inputs → don't flag
+
+  for (let el of inputs) {
+    if (
+      el.type !== "file" &&
+      el.offsetParent !== null &&   // visible
+      el.value.trim() === ""
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Update progress bar color and width
+function updateProgress() {
+  const percent = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
+  const bar = document.getElementById("wizardProgress");
+
+  bar.style.width = percent + "%";
+
+  if (hasEmptyInputs(currentStep)) {
+    bar.classList.remove("progress-ok");
+    bar.classList.add("progress-error");
+  } else {
+    bar.classList.remove("progress-error");
+    bar.classList.add("progress-ok");
+  }
+}
+
+// Show the current step
+function showStep(step) {
+  document.querySelectorAll(".wizard-step").forEach(div => {
+    div.classList.add("wizard-hide");
+  });
+
+  if (step === TOTAL_STEPS) {
+    // Final step → show all steps
+    document.querySelectorAll(".wizard-step").forEach(div => {
+      div.classList.remove("wizard-hide");
+    });
+  } else {
+    const active = document.getElementById("step" + step);
+    if (active) active.classList.remove("wizard-hide");
+  }
+
+  updateProgress();
+}
+
+// Initial load
+document.addEventListener("DOMContentLoaded", () => {
+  showStep(1);
+
+  // Live validation on any input/select change
+  document.body.addEventListener("input", updateProgress);
+  document.body.addEventListener("change", updateProgress);
+});
+
+// Navigate next
+function nextStep() {
+  if (currentStep < TOTAL_STEPS) currentStep++;
+  showStep(currentStep);
+}
+
+// Navigate previous
+function prevStep() {
+  if (currentStep > 1) currentStep--;
+  showStep(currentStep);
+}
+
+// Optional: Go to any step directly
+function goToStep(step) {
+  if (step >= 1 && step <= TOTAL_STEPS) {
+    currentStep = step;
+    showStep(currentStep);
+  }
+}
+</script>
+
+
+<body>
+
+<header>
+  <!-- Put jssstu_header.jpg in the same folder as this HTML -->
+   <img src="jssstu_header.jpg" alt="University Header" id="uniHeader" onerror="this.style.display='none'"/>
+
+  <div style="width:100%">
+    <h1>OBE Calculation Sheet</h1>
+    <div style="font-size:0.9rem">Set CO targets and compute attainment for CIE and SEE.</div>
+  </div>
+</header>
+<!-- Wizard Progress Bar -->
+<div id="wizardBar" style="margin:15px 0;">
+  <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+    <span>Grid</span>
+    <span>CIE</span>
+    <span>SEE</span>
+    <span>Direct</span>
+    <span>CO–PO</span>
+    <span>Final</span>
+  </div>
+
+  <div style="height:6px; background:#ddd; border-radius:4px;">
+    <div id="wizardProgress"
+         style="height:6px; width:0%; background:#004aad; border-radius:4px;">
+    </div>
+  </div>
+</div>
+
+<section style="margin-top:12px">
+<div id="step1" class="wizard-step">
+  <!-- Course metadata -->
+  <div class="grid">
+    <div><label>Department Name</label><input id="deptname" placeholder="Enter Department Name"></div>
+    <div><label>Course Coordinator</label><input id="coordinator" placeholder="Prof. ..."></div>
+    <div><label>Department</label><input id="department" placeholder="Electronics and Communication Engineering"></div>
+    <div><label>Academic Year</label><input id="acyear" placeholder="2023-24"></div>
+    <div><label>UG/PG</label><input id="ugpg" placeholder="UG or PG"></div>
+    <div><label>Semester</label><input id="semester" placeholder="Enter Semester"></div>
+    <div><label>Section</label><input id="section" placeholder="Enter Section"></div>
+    <div><label>Course Code</label><input id="coursecode" placeholder="20EC736"></div>
+    <div><label>Course Name</label><input id="coursename" placeholder="Enter Course Name"></div>
+    <div><label>Number of COs</label><input id="numcos" type="number" min="1" max="12" placeholder="e.g., 4"></div>
+    <div><label>Number of Students (template)</label><input id="numstudents" type="number" min="1" placeholder="60"></div>
+  </div>
+
+  <hr>
+
+  <!-- Download template control (creates a template matching current numcos) -->
+  <div style="margin-bottom:12px">
+    <button id="downloadTemplate">Download Excel Template</button>
+   
+  </div>
+<div class="wizard-controls">
+  <button onclick="prevStep()">← Previous</button>
+  <button onclick="nextStep()">Next →</button>
+</div>
+
+  <hr>
+</div>
+<div id="step2" class="wizard-step">
+  <!-- CIE -->
+  <div class="section-title">Set Targets (CIE)</div>
+  <div class="co-targets" id="targetsContainerCIE"></div>
+  <div style="margin-top:10px">
+    <input type="file" id="fileInputCIE" accept=".xlsx,.xls,.csv">
+    <button id="parseFileCIE">Parse & Compute CIE</button>
+   <!--  <button id="printReportCIE" style="margin-left:8px">Print CIE</button>-->
+  </div>
+  <div id="uploadedTableCIE" class="result-block"></div>
+  <div id="summaryTableCIE" class="result-block"></div>
+<div class="wizard-controls">
+  <button onclick="prevStep()">← Previous</button>
+  <button onclick="nextStep()">Next →</button>
+</div>
+
+  <hr>
+</div>
+<div id="step3" class="wizard-step">
+  <!-- SEE -->
+<h2 class="text-center mb-4 fw-bold text-primary">Method1: load excel like CIE</h2>
+
+  <div class="section-title">Set Targets (SEE)</div>
+  <div class="co-targets" id="targetsContainerSEE"></div>
+  <div style="margin-top:10px">
+    <input type="file" id="fileInputSEE" accept=".xlsx,.xls,.csv">
+    <button id="parseFileSEE">Parse & Compute SEE</button>
+    <!-- <button id="printReportSEE" style="margin-left:8px">Print SEE</button>-->
+  </div>
+<h2 class="text-center mb-4 fw-bold text-warning">OR</h2>
+
+<div class="container mt-5">
+  <div class="card shadow p-4">
+
+    <h2 class="text-center mb-4 fw-bold text-primary">Method2: load from exam results</h2>
+
+    <!-- Upload Excel -->
+    <div class="mb-4">
+      <label class="form-label fw-bold">Upload Excel File</label>
+      <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control">
+    </div>
+
+    <h4 class="mt-4 fw-semibold">Enter CO Mapping for Q1 to Q15</h4>
+
+    <!-- CO Table -->
+
+    <table class="table table-bordered table-hover table-sm mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>Question</th>
+          <th>CO #</th>
+        </tr>
+      </thead>
+      <tbody>
+          <script>
+    // create the 15 rows with inputs
+    for (let i = 1; i <= 15; i++) {
+      document.write(`
+        <tr>
+          <td class="fw-bold">Q${i}</td>
+          <td>
+            <input type="number" id="co_Q${i}" min="1" max="10"
+                   class="form-control" />
+          </td>
+        </tr>
+      `);
+    }
+  </script>
+      </tbody>
+    </table>
+
+<script>
+  // default values you want to auto-fill
+  const defaultValues = "123451122334455".split(""); 
+  // converts into: ["1","2","3","4","5","1","1","2","2","3","3","4","4","5","5"]
+
+  window.onload = function() {
+    for (let i = 1; i <= 15; i++) {
+      const input = document.getElementById(`co_Q${i}`);
+      input.value = defaultValues[i - 1];
+    }
+  };
+</script>
+    <!-- Buttons -->
+    <div class="text-center mt-3">
+     <button class="btn btn-primary btn-lg px-4" onclick="runAllCOFunctions()">
+  Compute CO Results
+</button>
+<!--
+<button id="resetBtn" class="btn btn-danger">
+    Reset Results
+</button>
+
+ -->
+
+    
+    <div id="output" class="table-responsive"></div>
+  </div>
+</div>
+
+
+  <div id="uploadedTableSEE" class="result-block"></div>
+  <div id="summaryTableSEE" class="result-block"></div>
+
+</div>
+<div class="wizard-controls">
+  <button onclick="prevStep()">← Previous</button>
+  <button onclick="nextStep()">Next →</button>
+</div>
+
+</div>
+
+<div id="step4" class="wizard-step">
+
+<h1>CO Weighted Calculation (CIE / SEE + Indirect Feedback)</h1>
+
+  
+<!-- Weight inputs -->
+<div class="section">
+  <div class="row">
+
+    <div>
+      <label for="cieWeight">CIE Weight (%)</label><br>
+      <input id="cieWeight" type="number" min="0" max="100" value="40">
+    </div>
+
+    <div>
+      <label for="seeWeight">SEE Weight (%)</label><br>
+      <input id="seeWeight" type="number" min="0" max="100" value="60">
+    </div>
+
+    <div>
+      <label for="directWeight">Direct Weight (%)</label><br>
+      <input id="directWeight" type="number" min="0" max="100" value="80">
+    </div>
+
+    <div>
+      <label>Indirect Weight (%)</label><br>
+      <input id="indirectWeight" type="number" min="0" max="100" value="20">
+    </div>
+
+    <div style="min-width:240px">
+      <div class="small">
+        Indirect feedback = Score 1–5 (converted to percentage automatically)
+        <br>
+        Final = (CIE/SEE weighted) × Direct + Indirect% × Indirect
+      </div>
+    </div>
+
+    <div style="margin-left:auto">
+      <button id="computeBtn">Compute</button>
+      <button id="clearBtn" style="margin-left:8px">Clear Inputs</button>
+    </div>
+
+  </div>
+
+</div>
+
+
+  <!-- CO inputs area (auto-generated based on numCOs) -->
+  <div id="coSection" class="section">
+    <div class="small">Per-CO inputs </code> — if not set, defaults to 4)</div>
+
+    <div id="coGrid" class="co-grid" style="margin-top:12px;">
+      <!-- headings and inputs inserted by JS -->
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" class="section" style="display:none">
+    <h3>Results</h3>
+    <div id="resultTableWrap"></div>
+
+    <div id="chartWrap">
+      <canvas id="coChart" width="900" height="350"></canvas>
+    </div>
+  </div>
+<div class="wizard-controls">
+  <button onclick="prevStep()">← Previous</button>
+  <button onclick="nextStep()">Next →</button>
+</div>
+
+</div>
+
+<div id="step5" class="wizard-step">
+<h3>CO–PO Mapping</h3>
+<div id="copotable"></div>
+
+<br><button onclick="computePOAttainmentAndPlot()">Compute PO Attainment</button>
+
+<h3>CO–PO / CO–PSO Mapping (With Final Attainment)</h3>
+<table id="COPO_Output_Table" border="1" cellpadding="5"></table>
+
+<div id="poresults"></div>
+
+
+
+<canvas id="poChart" width="800" height="400"></canvas>
+<div class="wizard-controls">
+  <button onclick="prevStep()">← Previous</button>
+  <button onclick="nextStep()">Next →</button>
+</div>
+
+<button onclick="printAll()">Print</button>
+ <button id="resetAll" style="margin-left:12px; background:#f66; color:#fff">Reset All</button>
+</div>
+
+
+
+</section>
+<script>
+async function runAllCOFunctions() {
+  await computeCOs();
+  await sendResultsBackWithoutSection();
+  await loadCOResults();
+}
+
+</script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+ 
+
+<!-- SheetJS -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="obe.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="script-wizard.js" defer></script>
+
+</body>
+</html>
