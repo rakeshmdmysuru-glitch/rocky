@@ -1073,6 +1073,8 @@ function printAll() {
     "PAGEBREAK",
     buildFooterCourseInfo(),
     cloneElementHTML(document.getElementById("resultsSection")),
+`<img src="${chartWrap}" style="width:100%; max-width:900px; display:block; margin:auto;" />`
+ ,
     "PAGEBREAK",
     buildFooterCourseInfo(),
     `<h2 class="section-title">CO-PO Expected</h2>`,
