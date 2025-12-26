@@ -602,8 +602,7 @@ function computeAndRender() {
   storeFinalArr(finalArr);
   buildCOPOTable(finalArr.length);
 }
-
-
+
 
 
 function renderTable(labels, cie, see, directPercent, indirectScore, indirectPercent, finalVals) {
@@ -838,27 +837,10 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
     }
 
     // AVG MAPPING ROW
-    // AVG MAPPING ROW (average of multiplied CO×PO values, 2 decimal places)
     let avgRow = "<tr><td><b>Avg Mapping</b></td>";
+    const avgMappingValues = []; // store avg mapping for Expected PO
 
-    PO_LIST.forEach((po, index) => {
-
-        /*
-        // ❌ OLD LOGIC (dividing by total COs)
-        let sum = 0;
-
-        for (let co = 1; co <= numCOs; co++) {
-            const finalCO = Number(finalArr[co - 1]) || 0;
-            const key = `map_${po}_co${co}`;
-            const level = Number(localStorage.getItem(key) || 0);
-
-            sum += (finalCO / 100) * level; // multiplied value
-        }
-
-        const avg = (sum / numCOs).toFixed(2); // round to 2 decimals
-        */
-
-        // ✅ NEW LOGIC (divide only by entered COs)
+    PO_LIST.forEach(po => {
         let sum = 0;
         let count = 0;
 
@@ -875,6 +857,7 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
 
         const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
         avgRow += `<td>${avg}</td>`;
+        avgMappingValues.push(avg); // save for Expected PO
     });
 
     avgRow += "</tr>";
@@ -882,8 +865,8 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
 
     // EXPECTED PO ROW
     let expectedRow = "<tr><td><b>Expected PO (%)</b></td>";
-    poAvg.forEach(v => {
-        const percent = ((v / 3) * 100).toFixed(2);
+    avgMappingValues.forEach(v => {
+        const percent = ((v / 3) * 100).toFixed(2); // percentage from Avg Mapping row
         expectedRow += `<td>${percent}%</td>`;
     });
     expectedRow += "</tr>";
@@ -898,6 +881,7 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
     finalRow += "</tr>";
     table.innerHTML += finalRow;
 }
+
 // ---------------------------------------------------------
 // MAIN CALCULATION — PO ATTAINMENT (percent version)
 // ---------------------------------------------------------
