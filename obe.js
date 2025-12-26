@@ -840,7 +840,7 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
 let avgRow = "<tr><td><b>Avg Mapping</b></td>";
 
 PO_LIST.forEach((po, index) => {
-    let sum = 0;
+   /* let sum = 0;
 
     for (let co = 1; co <= numCOs; co++) {
         const finalCO = Number(finalArr[co - 1]) || 0;
@@ -851,7 +851,26 @@ PO_LIST.forEach((po, index) => {
 
     }
 
-    const avg = (sum / numCOs).toFixed(2); // round to 2 decimals
+    const avg = (sum / numCOs).toFixed(2); // round to 2 decimals */
+
+let sum = 0;
+let count = 0;
+
+for (let co = 1; co <= numCOs; co++) {
+    const finalCO = Number(finalArr[co - 1]) || 0;
+    const key = `map_${po}_co${co}`;
+    const level = Number(localStorage.getItem(key)) || 0;
+
+    if (level > 0) {
+        sum += (finalCO / 100) * level;
+        count++;
+    }
+}
+
+const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
+
+
+
     avgRow += `<td>${avg}</td>`;
 });
 
