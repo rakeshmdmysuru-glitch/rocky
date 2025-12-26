@@ -909,10 +909,10 @@ function computePOAttainment() {
 
     const numCOs = GLOBAL_finalArr.length;
 
-    let poWeightedSum = Array(TOTAL_PO).fill(0);  
-    let poWeight = Array(TOTAL_PO).fill(0);       
-    let poAvg = Array(TOTAL_PO).fill(0);          
-    let poFinal = Array(TOTAL_PO).fill(0);        
+    let poWeightedSum = Array(TOTAL_PO).fill(0);
+    let poCount = Array(TOTAL_PO).fill(0);     // ✅ count of mapped COs
+    let poAvg = Array(TOTAL_PO).fill(0);
+    let poFinal = Array(TOTAL_PO).fill(0);
 
     // 1️⃣ Accumulate weighted values
     for (let co = 1; co <= numCOs; co++) {
@@ -920,24 +920,42 @@ function computePOAttainment() {
 
         PO_LIST.forEach((po, index) => {
             const key = `map_${po}_co${co}`;
-            const level = Number(localStorage.getItem(key) || 0);
+            const level = Number(localStorage.getItem(key)) || 0;
 
-            poWeightedSum[index] += (finalCO / 100) * level; // scale final % to 0–1
+            if (level > 0) {
+                poWeightedSum[index] += (finalCO / 100) * level;
+                poCount[index]++;   // ✅ count only mapped COs
+            }
+
+            /*
+            ❌ OLD WRONG LOGIC
+            poWeightedSum[index] += (finalCO / 100) * level;
             poWeight[index] += level;
             poAvg[index] += level;
+            */
         });
     }
 
-    // 2️⃣ Compute Avg Mapping and store in session
-    poAvg = poAvg.map(sum => (sum / numCOs));
-    PO_LIST.forEach((po, i) => localStorage.setItem(`avg_${po}`, poAvg[i]));
-
-    // 3️⃣ Compute PO Final (%) as weighted average
+    // 2️⃣ Compute Avg Mapping (0–3 scale)
     for (let i = 0; i < TOTAL_PO; i++) {
-       // poFinal[i] = poWeight[i] > 0 ? poWeightedSum[i] / poWeight[i] : 0;
-poFinal[i]=(poWeightedSum[i] /numCOs).toFixed(2)/3*100;
-//console.log('po avg',poAvg[i]);
+        poAvg[i] = poCount[i] > 0 ? (poWeightedSum[i] / poCount[i]) : 0;
+        localStorage.setItem(`avg_${PO_LIST[i]}`, poAvg[i]);
     }
+
+    /*
+    ❌ OLD WRONG LOGIC
+    poAvg = poAvg.map(sum => (sum / numCOs));
+    */
+
+    // 3️⃣ Compute PO Final (%) — DIRECTLY from Avg Mapping
+    for (let i = 0; i < TOTAL_PO; i++) {
+        poFinal[i] = (poAvg[i] / 3) * 100;
+    }
+
+    /*
+    ❌ OLD WRONG LOGIC
+    poFinal[i] = (poWeightedSum[i] / numCOs).toFixed(2) / 3 * 100;
+    */
 
     // 4️⃣ Store expected and attained in session for chart
     storePOForChart(poFinal);
@@ -945,7 +963,6 @@ poFinal[i]=(poWeightedSum[i] /numCOs).toFixed(2)/3*100;
     // 5️⃣ Render final table
     renderCOPOTableWithFinal(GLOBAL_finalArr, poFinal, poAvg);
 }
-
 // ---------------------------------------------------------
 // STORE EXPECTED AND ATTAINED PO FOR CHART
 // ---------------------------------------------------------
