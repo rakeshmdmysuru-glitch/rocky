@@ -782,19 +782,22 @@ function updatePOColumnAverages() {
 //average of entered cells only
 
 
+// ---------------------------------------------------------
+// UPDATE COLUMN AVERAGES (from entered CO×PO values)
+// ---------------------------------------------------------
 function updatePOColumnAverages() {
     const numCOs = GLOBAL_finalArr.length;
     let avgCells = document.querySelectorAll("#avgRow .avgCell");
 
     PO_LIST.forEach((po, index) => {
         let sum = 0;
-        let count = 0; // number of entered CO values
+        let count = 0;
 
         for (let co = 1; co <= numCOs; co++) {
             const key = `map_${po}_co${co}`;
-            const value = Number(localStorage.getItem(key));
+            const value = Number(localStorage.getItem(key)) || 0;
 
-            if (value && value > 0) {   // consider only entered cells
+            if (value > 0) { // consider only entered values
                 sum += value;
                 count++;
             }
@@ -805,12 +808,74 @@ function updatePOColumnAverages() {
     });
 }
 
-
+// ---------------------------------------------------------
+// STORE PREDEFINED AVG ROW FOR EXPECTED PO (%)
+// ---------------------------------------------------------
+function storePredefinedAvgRow() {
+    const avgCells = document.querySelectorAll("#avgRow .avgCell"); // Average row
+    avgCells.forEach((cell, index) => {
+        const po = PO_LIST[index];
+        const value = Number(cell.textContent) || 0; // predefined target value
+        localStorage.setItem(`target_${po}`, value);
+    });
+    console.log("Predefined Avg row stored:", PO_LIST.map(po => localStorage.getItem(`target_${po}`)));
+}
 
 // ---------------------------------------------------------
-// RENDER FINAL OUTPUT TABLE WITH PERCENTAGES
+// COMPUTE PO ATTAINMENT
 // ---------------------------------------------------------
-function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
+function computePOAttainment() {
+    if (!GLOBAL_finalArr || GLOBAL_finalArr.length === 0) {
+        alert("Final CO percentages (finalArr) not stored yet.");
+        return;
+    }
+
+    const numCOs = GLOBAL_finalArr.length;
+    const poWeightedSum = Array(TOTAL_PO).fill(0);
+    const poCount = Array(TOTAL_PO).fill(0);
+    const poAvg = Array(TOTAL_PO).fill(0);
+    const poFinal = Array(TOTAL_PO).fill(0);
+    const expectedPO = Array(TOTAL_PO).fill(0);
+
+    // 1️⃣ Accumulate weighted values (CO × PO)
+    for (let co = 1; co <= numCOs; co++) {
+        const finalCO = Number(GLOBAL_finalArr[co - 1]) || 0;
+
+        PO_LIST.forEach((po, index) => {
+            const key = `map_${po}_co${co}`;
+            const level = Number(localStorage.getItem(key)) || 0;
+
+            if (level > 0) {
+                poWeightedSum[index] += (finalCO / 100) * level;
+                poCount[index]++;
+            }
+        });
+    }
+
+    // 2️⃣ Compute Avg Mapping (0–3 scale) ignoring zeros
+    for (let i = 0; i < TOTAL_PO; i++) {
+        poAvg[i] = poCount[i] > 0 ? poWeightedSum[i] / poCount[i] : 0;
+        // PO Final (%) — actual attainment
+        poFinal[i] = poCount[i] > 0 ? (poAvg[i] / 3) * 100 : 0;
+    }
+
+    // 3️⃣ Expected PO (%) — read directly from stored Avg row (predefined)
+    PO_LIST.forEach((po, i) => {
+        const avgStored = Number(localStorage.getItem(`target_${po}`)) || 0; // 0–3 scale
+        expectedPO[i] = (avgStored / 3) * 100;
+    });
+
+    // 4️⃣ Store for chart
+    storePOForChart(poFinal);
+
+    // 5️⃣ Render final table
+    renderCOPOTableWithFinal(GLOBAL_finalArr, poFinal, poAvg, expectedPO);
+}
+
+// ---------------------------------------------------------
+// RENDER CO–PO TABLE WITH FINAL ATTAINMENT
+// ---------------------------------------------------------
+function renderCOPOTableWithFinal(finalArr, poFinal, poAvg, expectedPO) {
     const numCOs = finalArr.length;
     const table = document.getElementById("COPO_Output_Table");
     table.innerHTML = "";
@@ -821,110 +886,50 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg) {
     header += "</tr>";
     table.innerHTML += header;
 
-    // CO ROWS: each CO × PO multiplied value
+    // CO ROWS: CO × PO multiplied values
     for (let co = 1; co <= numCOs; co++) {
         const finalCO = Number(finalArr[co - 1]) || 0;
         let row = `<tr><td>CO${co} (${finalCO.toFixed(3)}%)</td>`;
+
         PO_LIST.forEach(po => {
             const key = `map_${po}_co${co}`;
             const level = Number(localStorage.getItem(key) || 0);
-            const multiplied = ((finalCO / 100) * level).toFixed(2); // scaled to 0–3
+            const multiplied = ((finalCO / 100) * level).toFixed(2);
             row += `<td>${multiplied}</td>`;
         });
+
         row += "</tr>";
         table.innerHTML += row;
     }
 
     // AVG MAPPING ROW
-    // AVG MAPPING ROW (average of multiplied CO×PO values, 2 decimal places)
-let avgRow = "<tr><td><b>Avg Mapping</b></td>";
+    let avgRow = "<tr id='avgRow'><td><b>Avg Mapping</b></td>";
+    PO_LIST.forEach((po, index) => {
+        const avg = poAvg[index].toFixed(2);
+        avgRow += `<td class="avgCell">${avg}</td>`;
+    });
+    avgRow += "</tr>";
+    table.innerHTML += avgRow;
 
-PO_LIST.forEach((po, index) => {
-    let sum = 0;
-
-    for (let co = 1; co <= numCOs; co++) {
-        const finalCO = Number(finalArr[co - 1]) || 0;
-        const key = `map_${po}_co${co}`;
-        const level = Number(localStorage.getItem(key) || 0);
-
-        sum += (finalCO / 100) * level; // multiplied value
-
-    }
-
-    const avg = (sum / numCOs).toFixed(2); // round to 2 decimals
-    avgRow += `<td>${avg}</td>`;
-});
-
-avgRow += "</tr>";
-table.innerHTML += avgRow;
-
-
-    // EXPECTED PO ROW
+    // EXPECTED PO (%)
     let expectedRow = "<tr><td><b>Expected PO (%)</b></td>";
-    poAvg.forEach(v => {
-        const percent = ((v / 3) * 100).toFixed(2);
-        expectedRow += `<td>${percent}%</td>`;
+    expectedPO.forEach(v => {
+        expectedRow += `<td>${v.toFixed(2)}%</td>`;
     });
     expectedRow += "</tr>";
     table.innerHTML += expectedRow;
 
-    // PO FINAL (ATTAINED PO) ROW
+    // PO FINAL (ATTAINED PO) (%)
     let finalRow = "<tr><td><b>PO Final (Attained PO) (%)</b></td>";
     poFinal.forEach(v => {
-        const percent = v.toFixed(2);
-        finalRow += `<td>${percent}%</td>`;
+        finalRow += `<td>${v.toFixed(2)}%</td>`;
     });
     finalRow += "</tr>";
     table.innerHTML += finalRow;
 }
 
-// ---------------------------------------------------------
-// MAIN CALCULATION — PO ATTAINMENT (percent version)
-// ---------------------------------------------------------
-function computePOAttainment() {
-    if (!GLOBAL_finalArr || GLOBAL_finalArr.length === 0) {
-        alert("Final CO percentages (finalArr) not stored yet.");
-        return;
-    }
 
-    const numCOs = GLOBAL_finalArr.length;
 
-    let poWeightedSum = Array(TOTAL_PO).fill(0);  
-    let poWeight = Array(TOTAL_PO).fill(0);       
-    let poAvg = Array(TOTAL_PO).fill(0);          
-    let poFinal = Array(TOTAL_PO).fill(0);        
-
-    // 1️⃣ Accumulate weighted values
-    for (let co = 1; co <= numCOs; co++) {
-        const finalCO = Number(GLOBAL_finalArr[co - 1]) || 0;
-
-        PO_LIST.forEach((po, index) => {
-            const key = `map_${po}_co${co}`;
-            const level = Number(localStorage.getItem(key) || 0);
-
-            poWeightedSum[index] += (finalCO / 100) * level; // scale final % to 0–1
-            poWeight[index] += level;
-            poAvg[index] += level;
-        });
-    }
-
-    // 2️⃣ Compute Avg Mapping and store in session
-    poAvg = poAvg.map(sum => (sum / numCOs));
-    PO_LIST.forEach((po, i) => localStorage.setItem(`avg_${po}`, poAvg[i]));
-
-    // 3️⃣ Compute PO Final (%) as weighted average
-    for (let i = 0; i < TOTAL_PO; i++) {
-       // poFinal[i] = poWeight[i] > 0 ? poWeightedSum[i] / poWeight[i] : 0;
-poFinal[i]=(poWeightedSum[i] /numCOs).toFixed(2)/3*100;
-//console.log('po avg',poAvg[i]);
-    }
-
-    // 4️⃣ Store expected and attained in session for chart
-    storePOForChart(poFinal);
-
-    // 5️⃣ Render final table
-    renderCOPOTableWithFinal(GLOBAL_finalArr, poFinal, poAvg);
-}
 // ---------------------------------------------------------
 // STORE EXPECTED AND ATTAINED PO FOR CHART
 // ---------------------------------------------------------
