@@ -806,6 +806,7 @@ function updatePOColumnAverages() {
         const avg = count > 0 ? (sum / count).toFixed(2) : "0.00";
         avgCells[index].textContent = avg;
     });
+
 }
 
 // ---------------------------------------------------------
@@ -829,6 +830,7 @@ function computePOAttainment() {
         alert("Final CO percentages (finalArr) not stored yet.");
         return;
     }
+storePredefinedAvgRow();
 
     const numCOs = GLOBAL_finalArr.length;
     const poWeightedSum = Array(TOTAL_PO).fill(0);
@@ -866,7 +868,8 @@ function computePOAttainment() {
     });
 
     // 4️⃣ Store for chart
-    storePOForChart(poFinal);
+   storePOForChart(poFinal);
+
 
     // 5️⃣ Render final table
     renderCOPOTableWithFinal(GLOBAL_finalArr, poFinal, poAvg, expectedPO);
@@ -884,7 +887,9 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg, expectedPO) {
     let header = "<tr><th>CO</th>";
     PO_LIST.forEach(po => header += `<th>${po}</th>`);
     header += "</tr>";
-    table.innerHTML += header;
+
+    // Build all rows as a single string for efficiency
+    let tableHTML = header;
 
     // CO ROWS: CO × PO multiplied values
     for (let co = 1; co <= numCOs; co++) {
@@ -899,62 +904,57 @@ function renderCOPOTableWithFinal(finalArr, poFinal, poAvg, expectedPO) {
         });
 
         row += "</tr>";
-        table.innerHTML += row;
+        tableHTML += row;
     }
 
     // AVG MAPPING ROW
     let avgRow = "<tr id='avgRow'><td><b>Avg Mapping</b></td>";
     PO_LIST.forEach((po, index) => {
-        const avg = poAvg[index].toFixed(2);
+        const avg = Number(poAvg[index] || 0).toFixed(2);
         avgRow += `<td class="avgCell">${avg}</td>`;
     });
     avgRow += "</tr>";
-    table.innerHTML += avgRow;
+    tableHTML += avgRow;
 
     // EXPECTED PO (%)
     let expectedRow = "<tr><td><b>Expected PO (%)</b></td>";
     expectedPO.forEach(v => {
-        expectedRow += `<td>${v.toFixed(2)}%</td>`;
+        expectedRow += `<td>${Number(v).toFixed(2)}%</td>`;
     });
     expectedRow += "</tr>";
-    table.innerHTML += expectedRow;
+    tableHTML += expectedRow;
 
     // PO FINAL (ATTAINED PO) (%)
     let finalRow = "<tr><td><b>PO Final (Attained PO) (%)</b></td>";
     poFinal.forEach(v => {
-        finalRow += `<td>${v.toFixed(2)}%</td>`;
+        finalRow += `<td>${Number(v).toFixed(2)}%</td>`;
     });
     finalRow += "</tr>";
-    table.innerHTML += finalRow;
+    tableHTML += finalRow;
+
+    table.innerHTML = tableHTML;
+ 
 }
-
-
 
 // ---------------------------------------------------------
 // STORE EXPECTED AND ATTAINED PO FOR CHART
 // ---------------------------------------------------------
 function storePOForChart(poFinal) {
-    // Expected PO (%) based on mapping averages
-  //  const expectedPO = PO_LIST.map(po => {
-   //     const avgMapping = Number(localStorage.getItem(`avg_${po}`) || 0);
-  //      return avgMapping > 0 ? 100 : 0;
-  //  });
+    // Expected PO (%) based on mapping averages (stored in localStorage)
+    const expectedPO = PO_LIST.map(po => {
+        const avgMapping = Number(localStorage.getItem(`target_${po}`) || 0);
+        return Number(((avgMapping / 3) * 100).toFixed(2)); // store as number
+    });
 
+    // Attained PO (%) from poFinal (already 0-100)
+    const attainedPO = poFinal.map(v => Number(v)); // ensure numbers
 
-const expectedPO = PO_LIST.map(po => {
-    const avgMapping = Number(localStorage.getItem(`avg_${po}`) || 0);
-    return ((avgMapping / 3) * 100).toFixed(2);
-});
-
-
-
-    // Attained PO (%) from poFinal (0–1 → 0–100)
-    //const attainedPO = poFinal.map(v => (v * 100));
-const attainedPO = poFinal.map(v => (v));
-
-    // Store in session
+    // Store in localStorage
     localStorage.setItem("EXPECTED_PO", JSON.stringify(expectedPO));
     localStorage.setItem("ATTAINED_PO", JSON.stringify(attainedPO));
+
+    console.log("EXPECTED_PO:", expectedPO);
+    console.log("ATTAINED_PO:", attainedPO);
 }
 
 let poChartInstance = null; // global variable
