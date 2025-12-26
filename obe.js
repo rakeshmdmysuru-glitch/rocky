@@ -910,11 +910,11 @@ function computePOAttainment() {
     const numCOs = GLOBAL_finalArr.length;
 
     let poWeightedSum = Array(TOTAL_PO).fill(0);
-    let poCount = Array(TOTAL_PO).fill(0);     // ✅ count of mapped COs
+    let poCount = Array(TOTAL_PO).fill(0);
     let poAvg = Array(TOTAL_PO).fill(0);
     let poFinal = Array(TOTAL_PO).fill(0);
 
-    // 1️⃣ Accumulate weighted values
+    // 1️⃣ Accumulate weighted values (CO attainment × mapping level)
     for (let co = 1; co <= numCOs; co++) {
         const finalCO = Number(GLOBAL_finalArr[co - 1]) || 0;
 
@@ -924,40 +924,23 @@ function computePOAttainment() {
 
             if (level > 0) {
                 poWeightedSum[index] += (finalCO / 100) * level;
-                poCount[index]++;   // ✅ count only mapped COs
+                poCount[index]++;
             }
-
-            /*
-            ❌ OLD WRONG LOGIC
-            poWeightedSum[index] += (finalCO / 100) * level;
-            poWeight[index] += level;
-            poAvg[index] += level;
-            */
         });
     }
 
-    // 2️⃣ Compute Avg Mapping (0–3 scale)
+    // 2️⃣ Compute Avg PO attainment (0–3 scale)
     for (let i = 0; i < TOTAL_PO; i++) {
         poAvg[i] = poCount[i] > 0 ? (poWeightedSum[i] / poCount[i]) : 0;
         localStorage.setItem(`avg_${PO_LIST[i]}`, poAvg[i]);
     }
 
-    /*
-    ❌ OLD WRONG LOGIC
-    poAvg = poAvg.map(sum => (sum / numCOs));
-    */
-
-    // 3️⃣ Compute PO Final (%) — DIRECTLY from Avg Mapping
+    // 3️⃣ Convert to PO attainment percentage
     for (let i = 0; i < TOTAL_PO; i++) {
         poFinal[i] = (poAvg[i] / 3) * 100;
     }
 
-    /*
-    ❌ OLD WRONG LOGIC
-    poFinal[i] = (poWeightedSum[i] / numCOs).toFixed(2) / 3 * 100;
-    */
-
-    // 4️⃣ Store expected and attained in session for chart
+    // 4️⃣ Store for charts
     storePOForChart(poFinal);
 
     // 5️⃣ Render final table
