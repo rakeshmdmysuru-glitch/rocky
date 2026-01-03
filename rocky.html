@@ -45,74 +45,67 @@
   <tbody></tbody>
 </table>
 
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
- const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
-  let tableData = [];
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+let tableData = [];
 
-  // Fetch CSV and populate table
-  fetch(csvUrl)
-    .then(res => res.text())
-    .then(data => {
-      const rows = data.split("\n").filter(r => r.trim() !== "");
-      // Skip header row
-      tableData = rows.slice(1).map(line => {
-        const cols = line.split(",");
-        return {
-          sl: cols[0],
-          date: cols[1],
-          type: cols[2],
-          description: cols[3],
-          year: new Date(cols[1]).getFullYear()
-        };
-      });
-      populateYearFilter();
-      renderTable();
-    })
-    .catch(err => console.error("Error loading CSV:", err));
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(csvText => {
+    const parsed = Papa.parse(csvText, { header: true });
+    tableData = parsed.data.map(row => ({
+      sl: row.sl,
+      date: row.date,
+      type: row.type,
+      description: row.description,
+      year: new Date(row.date).getFullYear()
+    }));
+    populateYearFilter();
+    renderTable();
+  })
+  .catch(err => console.error("Error loading CSV:", err));
 
-  const tbody = document.querySelector("#activity-table tbody");
-  const typeFilter = document.getElementById("typeFilter");
-  const yearFilter = document.getElementById("yearFilter");
-  const searchFilter = document.getElementById("searchFilter");
+const tbody = document.querySelector("#activity-table tbody");
+const typeFilter = document.getElementById("typeFilter");
+const yearFilter = document.getElementById("yearFilter");
+const searchFilter = document.getElementById("searchFilter");
 
-  // Render table based on filters
-  function renderTable() {
-    tbody.innerHTML = "";
-    const typeVal = typeFilter.value.toLowerCase();
-    const yearVal = yearFilter.value;
-    const searchVal = searchFilter.value.toLowerCase();
+function renderTable() {
+  tbody.innerHTML = "";
+  const typeVal = typeFilter.value.toLowerCase();
+  const yearVal = yearFilter.value;
+  const searchVal = searchFilter.value.toLowerCase();
 
-    tableData.forEach(row => {
-      if ((typeVal === "" || row.type.toLowerCase() === typeVal) &&
-          (yearVal === "" || row.year == yearVal) &&
-          (searchVal === "" || row.description.toLowerCase().includes(searchVal))) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.sl}</td>
-          <td>${row.date}</td>
-          <td>${row.type}</td>
-          <td>${row.description}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
-  }
+  tableData.forEach(row => {
+    if ((typeVal === "" || row.type.toLowerCase() === typeVal) &&
+        (yearVal === "" || row.year == yearVal) &&
+        (searchVal === "" || row.description.toLowerCase().includes(searchVal))) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row.sl}</td>
+        <td>${row.date}</td>
+        <td>${row.type}</td>
+        <td>${row.description}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  });
+}
 
-  // Populate Year filter dynamically
-  function populateYearFilter() {
-    const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
-    years.forEach(y => {
-      const opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
-      yearFilter.appendChild(opt);
-    });
-  }
+function populateYearFilter() {
+  const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
+  years.forEach(y => {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    yearFilter.appendChild(opt);
+  });
+}
 
-  // Add event listeners
-  typeFilter.addEventListener("change", renderTable);
-  yearFilter.addEventListener("change", renderTable);
-  searchFilter.addEventListener("input", renderTable);
+typeFilter.addEventListener("change", renderTable);
+yearFilter.addEventListener("change", renderTable);
+searchFilter.addEventListener("input", renderTable);
 </script>
 
 </body>
