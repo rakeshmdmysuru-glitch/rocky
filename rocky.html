@@ -2,35 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dynamic CSV Table</title>
+<title>Dynamic CSV Table with Bootstrap</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  /* Make Description column take more space */
+  table#activity-table th.description,
+  table#activity-table td.description {
+    width: 60%;
+    word-wrap: break-word;
+  }
+  table#activity-table th,
+  table#activity-table td {
+    vertical-align: top;
+  }
+</style>
 </head>
-<body>
+<body class="p-4">
 
-<!-- Filters -->
-<select id="typeFilter">
-  <option value="">All Types</option>
-</select>
+<div class="container">
+  <h2 class="mb-4">Publication Table</h2>
 
-<select id="yearFilter">
-  <option value="">All Years</option>
-</select>
+  <div class="row mb-3 g-2">
+    <div class="col-md-3">
+      <select id="typeFilter" class="form-select">
+        <option value="">All Types</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="yearFilter" class="form-select">
+        <option value="">All Years</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <input type="text" id="searchFilter" class="form-control" placeholder="Search Description">
+    </div>
+  </div>
 
-<input type="text" id="searchFilter" placeholder="Search Description">
+  <div class="table-responsive">
+    <table id="activity-table" class="table table-bordered table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th style="width:5%;">Sl No</th>
+          <th style="width:15%;">Date</th>
+          <th style="width:15%;">Type</th>
+          <th class="description">Description</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
-<!-- Table -->
-<table border="1" id="activity-table" style="width:100%; table-layout: fixed;">
-  <thead>
-    <tr>
-      <th>Sl No</th>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<!-- PapaParse for CSV parsing -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
 // Replace with your CSV URL
@@ -41,7 +63,6 @@ let tableData = [];
 fetch(csvUrl)
   .then(res => res.text())
   .then(csvText => {
-    // Parse CSV properly, keep quotes for Description
     const parsed = Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
@@ -49,7 +70,6 @@ fetch(csvUrl)
     });
 
     tableData = parsed.data.map(row => {
-      // Combine any extra fields into Description
       const allFields = Object.values(row);
       const description = allFields.slice(3).join(", ") || row["Description"] || "";
 
@@ -73,7 +93,7 @@ const typeFilter = document.getElementById("typeFilter");
 const yearFilter = document.getElementById("yearFilter");
 const searchFilter = document.getElementById("searchFilter");
 
-// Render table with filters
+// Render table
 function renderTable() {
   const typeVal = typeFilter.value.toLowerCase();
   const yearVal = yearFilter.value;
@@ -89,14 +109,14 @@ function renderTable() {
         <td>${row.sl}</td>
         <td>${row.date}</td>
         <td>${row.type}</td>
-        <td style="word-wrap: break-word;">${row.description}</td>
+        <td class="description">${row.description}</td>
       `;
       tbody.appendChild(tr);
     }
   });
 }
 
-// Populate Type filter dynamically
+// Populate filters
 function populateTypeFilter() {
   const types = [...new Set(tableData.map(r => r.type))].sort();
   types.forEach(t => {
@@ -109,7 +129,6 @@ function populateTypeFilter() {
   });
 }
 
-// Populate Year filter dynamically
 function populateYearFilter() {
   const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
   years.forEach(y => {
@@ -127,5 +146,6 @@ typeFilter.addEventListener("change", renderTable);
 yearFilter.addEventListener("change", renderTable);
 searchFilter.addEventListener("input", renderTable);
 </script>
+
 </body>
 </html>
