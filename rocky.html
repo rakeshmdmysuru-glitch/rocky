@@ -9,9 +9,6 @@
     th, td { border: 1px solid #999; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
   </style>
-
-  <!-- Latest Tabletop.js -->
-  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/dist/tabletop.min.js"></script>
 </head>
 <body>
 
@@ -30,25 +27,31 @@
 </table>
 
 <script>
-  window.addEventListener('DOMContentLoaded', function() {
-    Tabletop.init({
-      key: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pubhtml', // replace with your pubhtml URL
-      simpleSheet: true,
-      callback: function(data, tabletop) {
-        const tbody = document.querySelector("#activity-table tbody");
-        data.forEach(row => {
+  // Your published Google Sheet CSV URL
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+
+  fetch(csvUrl)
+    .then(res => res.text())
+    .then(data => {
+      const rows = data.split("\n").filter(r => r.trim() !== "");
+      const tbody = document.querySelector("#activity-table tbody");
+
+      // Skip header row
+      rows.slice(1).forEach(line => {
+        const cols = line.split(",");
+        if (cols.length >= 4) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${row["Sl No"]}</td>
-            <td>${row.Date}</td>
-            <td>${row.Type}</td>
-            <td>${row.Description}</td>
+            <td>${cols[0]}</td>
+            <td>${cols[1]}</td>
+            <td>${cols[2]}</td>
+            <td>${cols[3]}</td>
           `;
           tbody.appendChild(tr);
-        });
-      }
-    });
-  });
+        }
+      });
+    })
+    .catch(err => console.error("Error loading CSV:", err));
 </script>
 
 </body>
