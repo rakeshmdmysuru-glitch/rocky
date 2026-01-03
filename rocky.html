@@ -8,12 +8,31 @@
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #999; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
+    input, select { margin: 5px 10px 5px 0; padding: 5px; }
   </style>
 </head>
 <body>
 
 <h1>Academic Activities</h1>
 
+<!-- Filters -->
+<label for="typeFilter">Type:</label>
+<select id="typeFilter">
+  <option value="">All</option>
+  <option value="Journal">Journal</option>
+  <option value="Conference">Conference</option>
+  <option value="Workshop">Workshop</option>
+</select>
+
+<label for="yearFilter">Year:</label>
+<select id="yearFilter">
+  <option value="">All</option>
+</select>
+
+<label for="searchFilter">Search:</label>
+<input type="text" id="searchFilter" placeholder="Search Description">
+
+<!-- Table -->
 <table id="activity-table">
   <thead>
     <tr>
@@ -27,31 +46,73 @@
 </table>
 
 <script>
-  // Your published Google Sheet CSV URL
-  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+ const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+  let tableData = [];
 
+  // Fetch CSV and populate table
   fetch(csvUrl)
     .then(res => res.text())
     .then(data => {
       const rows = data.split("\n").filter(r => r.trim() !== "");
-      const tbody = document.querySelector("#activity-table tbody");
-
       // Skip header row
-      rows.slice(1).forEach(line => {
+      tableData = rows.slice(1).map(line => {
         const cols = line.split(",");
-        if (cols.length >= 4) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${cols[0]}</td>
-            <td>${cols[1]}</td>
-            <td>${cols[2]}</td>
-            <td>${cols[3]}</td>
-          `;
-          tbody.appendChild(tr);
-        }
+        return {
+          sl: cols[0],
+          date: cols[1],
+          type: cols[2],
+          description: cols[3],
+          year: new Date(cols[1]).getFullYear()
+        };
       });
+      populateYearFilter();
+      renderTable();
     })
     .catch(err => console.error("Error loading CSV:", err));
+
+  const tbody = document.querySelector("#activity-table tbody");
+  const typeFilter = document.getElementById("typeFilter");
+  const yearFilter = document.getElementById("yearFilter");
+  const searchFilter = document.getElementById("searchFilter");
+
+  // Render table based on filters
+  function renderTable() {
+    tbody.innerHTML = "";
+    const typeVal = typeFilter.value.toLowerCase();
+    const yearVal = yearFilter.value;
+    const searchVal = searchFilter.value.toLowerCase();
+
+    tableData.forEach(row => {
+      if ((typeVal === "" || row.type.toLowerCase() === typeVal) &&
+          (yearVal === "" || row.year == yearVal) &&
+          (searchVal === "" || row.description.toLowerCase().includes(searchVal))) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.sl}</td>
+          <td>${row.date}</td>
+          <td>${row.type}</td>
+          <td>${row.description}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+  }
+
+  // Populate Year filter dynamically
+  function populateYearFilter() {
+    const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
+    years.forEach(y => {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      yearFilter.appendChild(opt);
+    });
+  }
+
+  // Add event listeners
+  typeFilter.addEventListener("change", renderTable);
+  yearFilter.addEventListener("change", renderTable);
+  searchFilter.addEventListener("input", renderTable);
 </script>
 
 </body>
