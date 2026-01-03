@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dynamic Table from Vertical Excel Data</title>
+<title>Dynamic CSV Table</title>
 </head>
 <body>
 
@@ -30,29 +30,26 @@
   <tbody></tbody>
 </table>
 
+<!-- PapaParse for proper CSV parsing -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
-// Replace with your CSV/Excel data URL
+// Replace with your Google Sheets CSV URL
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
 
 let tableData = [];
 
-// Fetch CSV dynamically
 fetch(csvUrl)
   .then(res => res.text())
   .then(csvText => {
-    // Split by line breaks and remove empty lines
-    const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
-
-    // Every 4 lines = 1 record (Sl No, Date, Type, Description)
-    for (let i = 0; i < lines.length; i += 4) {
-      tableData.push({
-        sl: lines[i] || "",
-        date: lines[i + 1] || "",
-        type: lines[i + 2] || "",
-        description: lines[i + 3] || "",
-        year: lines[i + 1] ? new Date(lines[i + 1]).getFullYear() : ""
-      });
-    }
+    // Parse CSV properly with headers
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+    tableData = parsed.data.map(row => ({
+      sl: row["Sl No"] || "",
+      date: row["Date"] || "",
+      type: row["Type"] || "",
+      description: row["Description"] || "",
+      year: row["Date"] ? new Date(row["Date"]).getFullYear() : ""
+    }));
 
     populateTypeFilter();
     populateYearFilter();
@@ -103,7 +100,7 @@ function populateTypeFilter() {
 
 // Populate Year filter dynamically
 function populateYearFilter() {
-  const years = [...new Set(tableData.map(r => r.year))].sort((a, b) => b - a);
+  const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
   years.forEach(y => {
     if (y) {
       const opt = document.createElement("option");
