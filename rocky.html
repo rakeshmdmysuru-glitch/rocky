@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dynamic Excel Table</title>
+<title>Dynamic Table from Vertical Excel Data</title>
 </head>
 <body>
 
@@ -31,7 +31,7 @@
 </table>
 
 <script>
-// Replace this with your Google Sheets published CSV URL
+// Replace with your CSV/Excel data URL
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
 
 let tableData = [];
@@ -40,10 +40,10 @@ let tableData = [];
 fetch(csvUrl)
   .then(res => res.text())
   .then(csvText => {
-    // Split by line breaks
+    // Split by line breaks and remove empty lines
     const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
 
-    // Each record has 4 rows: Sl No, Date, Type, Description
+    // Every 4 lines = 1 record (Sl No, Date, Type, Description)
     for (let i = 0; i < lines.length; i += 4) {
       tableData.push({
         sl: lines[i] || "",
@@ -103,7 +103,7 @@ function populateTypeFilter() {
 
 // Populate Year filter dynamically
 function populateYearFilter() {
-  const years = [...new Set(tableData.map(r => r.year))].sort((a,b) => b - a);
+  const years = [...new Set(tableData.map(r => r.year))].sort((a, b) => b - a);
   years.forEach(y => {
     if (y) {
       const opt = document.createElement("option");
