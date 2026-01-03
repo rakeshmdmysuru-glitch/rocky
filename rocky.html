@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CSV Table</title>
+<title>Dynamic Excel Table</title>
 </head>
 <body>
 
@@ -18,7 +18,7 @@
 <input type="text" id="searchFilter" placeholder="Search Description">
 
 <!-- Table -->
-<table id="activity-table" border="1" cellpadding="5">
+<table border="1" id="activity-table">
   <thead>
     <tr>
       <th>Sl No</th>
@@ -30,24 +30,30 @@
   <tbody></tbody>
 </table>
 
-<!-- PapaParse Library -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
+// Replace this with your Google Sheets published CSV URL
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+
 let tableData = [];
 
+// Fetch CSV dynamically
 fetch(csvUrl)
   .then(res => res.text())
   .then(csvText => {
-    // Parse CSV with headers
-    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-    tableData = parsed.data.map(row => ({
-      sl: row["Sl No"] || "",
-      date: row["Date"] || "",
-      type: row["Type"] || "",
-      description: row["Description"] || "",
-      year: row["Date"] ? new Date(row["Date"]).getFullYear() : ""
-    }));
+    // Split by line breaks
+    const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
+
+    // Each record has 4 rows: Sl No, Date, Type, Description
+    for (let i = 0; i < lines.length; i += 4) {
+      tableData.push({
+        sl: lines[i] || "",
+        date: lines[i + 1] || "",
+        type: lines[i + 2] || "",
+        description: lines[i + 3] || "",
+        year: lines[i + 1] ? new Date(lines[i + 1]).getFullYear() : ""
+      });
+    }
+
     populateTypeFilter();
     populateYearFilter();
     renderTable();
@@ -61,11 +67,11 @@ const searchFilter = document.getElementById("searchFilter");
 
 // Render table with filters
 function renderTable() {
-  tbody.innerHTML = "";
   const typeVal = typeFilter.value.toLowerCase();
   const yearVal = yearFilter.value;
   const searchVal = searchFilter.value.toLowerCase();
 
+  tbody.innerHTML = "";
   tableData.forEach(row => {
     if ((typeVal === "" || row.type.toLowerCase() === typeVal) &&
         (yearVal === "" || row.year == yearVal) &&
@@ -82,11 +88,11 @@ function renderTable() {
   });
 }
 
-// Populate Type filter
+// Populate Type filter dynamically
 function populateTypeFilter() {
   const types = [...new Set(tableData.map(r => r.type))].sort();
   types.forEach(t => {
-    if(t) {
+    if (t) {
       const opt = document.createElement("option");
       opt.value = t;
       opt.textContent = t;
@@ -95,11 +101,11 @@ function populateTypeFilter() {
   });
 }
 
-// Populate Year filter
+// Populate Year filter dynamically
 function populateYearFilter() {
-  const years = [...new Set(tableData.map(r => r.year))].sort((a,b)=>b-a);
+  const years = [...new Set(tableData.map(r => r.year))].sort((a,b) => b - a);
   years.forEach(y => {
-    if(y) {
+    if (y) {
       const opt = document.createElement("option");
       opt.value = y;
       opt.textContent = y;
@@ -108,7 +114,7 @@ function populateYearFilter() {
   });
 }
 
-// Add event listeners
+// Event listeners
 typeFilter.addEventListener("change", renderTable);
 yearFilter.addEventListener("change", renderTable);
 searchFilter.addEventListener("input", renderTable);
