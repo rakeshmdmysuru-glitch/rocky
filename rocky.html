@@ -18,7 +18,7 @@
 <input type="text" id="searchFilter" placeholder="Search Description">
 
 <!-- Table -->
-<table border="1" id="activity-table">
+<table border="1" id="activity-table" style="width:100%; table-layout: fixed;">
   <thead>
     <tr>
       <th>Sl No</th>
@@ -30,10 +30,10 @@
   <tbody></tbody>
 </table>
 
-<!-- PapaParse for proper CSV parsing -->
+<!-- PapaParse for CSV parsing -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
-// Replace with your Google Sheets CSV URL
+// Replace with your CSV URL
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
 
 let tableData = [];
@@ -41,15 +41,26 @@ let tableData = [];
 fetch(csvUrl)
   .then(res => res.text())
   .then(csvText => {
-    // Parse CSV properly with headers
-    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-    tableData = parsed.data.map(row => ({
-      sl: row["Sl No"] || "",
-      date: row["Date"] || "",
-      type: row["Type"] || "",
-      description: row["Description"] || "",
-      year: row["Date"] ? new Date(row["Date"]).getFullYear() : ""
-    }));
+    // Parse CSV properly, keep quotes for Description
+    const parsed = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      quoteChar: '"'
+    });
+
+    tableData = parsed.data.map(row => {
+      // Combine any extra fields into Description
+      const allFields = Object.values(row);
+      const description = allFields.slice(3).join(", ") || row["Description"] || "";
+
+      return {
+        sl: row["Sl No"] || "",
+        date: row["Date"] || "",
+        type: row["Type"] || "",
+        description: description,
+        year: row["Date"] ? new Date(row["Date"]).getFullYear() : ""
+      };
+    });
 
     populateTypeFilter();
     populateYearFilter();
@@ -78,7 +89,7 @@ function renderTable() {
         <td>${row.sl}</td>
         <td>${row.date}</td>
         <td>${row.type}</td>
-        <td>${row.description}</td>
+        <td style="word-wrap: break-word;">${row.description}</td>
       `;
       tbody.appendChild(tr);
     }
