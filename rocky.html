@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Academic Activities</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+
+  <!-- Tabletop.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/dist/tabletop.min.js"></script>
+</head>
+<body>
+
+<h1>Academic Activities</h1>
+
+<table id="activity-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    Tabletop.init({
+      key: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pubhtml',
+      simpleSheet: true,
+      callback: function(data, tabletop) {
+        const tbody = document.querySelector("#activity-table tbody");
+        data.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.Date}</td>
+            <td>${row.Type}</td>
+            <td>${row.Description}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
