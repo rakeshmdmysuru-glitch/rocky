@@ -130,8 +130,24 @@ function computeCOs(){
       const m2 = getQMarks(student,q2);
       COscores[`CO${co}`] += Math.max(m1,m2);
     });
+const orderedCOscores = {};
 
-    results.push({student_usno: student.roll_num, NAME: student.NAME || "", SECTION: student.Section, ...COscores});
+Object.keys(COscores)
+  .sort((a, b) => {
+    return parseInt(a.replace('CO', '')) - parseInt(b.replace('CO', ''));
+  })
+  .forEach(coKey => {
+    orderedCOscores[coKey] = COscores[coKey];
+  });
+
+results.push({
+  student_usno: student.roll_num,
+  NAME: student.NAME || "",
+  SECTION: student.Section,
+  ...orderedCOscores
+});
+
+    //results.push({student_usno: student.roll_num, NAME: student.NAME || "", SECTION: student.Section, ...COscores});
   });
 
   displayResult(results);

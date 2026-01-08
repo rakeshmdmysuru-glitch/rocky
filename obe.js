@@ -162,6 +162,7 @@ function processAOA(prefix, aoa) {
   }
 
   const students = [];
+/* old
   for (let r = 1; r < aoa.length; r++) {
     const row = aoa[r];
     if (!row || row.length === 0) continue;
@@ -175,6 +176,27 @@ function processAOA(prefix, aoa) {
     }
     students.push({ slno, usn, name, cos });
   }
+*/
+
+for (let r = 1; r < aoa.length; r++) {
+  const row = aoa[r];
+  if (!row || row.length === 0) continue;
+
+  const slno = row[0] || r;
+  const usn = String(row[1] || '').trim();
+  const name = String(row[2] || '').trim();
+
+  // 🔴 SKIP rows without student data
+  if (!usn || !name) continue;
+
+  const cos = [];
+  for (let ci = 0; ci < numCOs; ci++) {
+    const val = parseFloat(row[3 + ci]);
+    cos.push(isNaN(val) ? 0 : val);
+  }
+
+  students.push({ slno, usn, name, cos });
+}
 
   if (students.length === 0) { alert('No student data rows found.'); return; }
 
@@ -819,7 +841,7 @@ function storePredefinedAvgRow() {
         const value = Number(cell.textContent) || 0; // predefined target value
         localStorage.setItem(`target_${po}`, value);
     });
-    console.log("Predefined Avg row stored:", PO_LIST.map(po => localStorage.getItem(`target_${po}`)));
+   // console.log("Predefined Avg row stored:", PO_LIST.map(po => localStorage.getItem(`target_${po}`)));
 }
 
 // ---------------------------------------------------------
@@ -870,9 +892,10 @@ storePredefinedAvgRow();
     // 4️⃣ Store for chart
    storePOForChart(poFinal);
 
-
     // 5️⃣ Render final table
     renderCOPOTableWithFinal(GLOBAL_finalArr, poFinal, poAvg, expectedPO);
+replaceZeroWithBlank();
+
 }
 
 // ---------------------------------------------------------
@@ -953,8 +976,8 @@ function storePOForChart(poFinal) {
     localStorage.setItem("EXPECTED_PO", JSON.stringify(expectedPO));
     localStorage.setItem("ATTAINED_PO", JSON.stringify(attainedPO));
 
-    console.log("EXPECTED_PO:", expectedPO);
-    console.log("ATTAINED_PO:", attainedPO);
+   // console.log("EXPECTED_PO:", expectedPO);
+  //  console.log("ATTAINED_PO:", attainedPO);
 }
 
 let poChartInstance = null; // global variable
@@ -1438,5 +1461,22 @@ function insertNamesIntoSEE() {
 
 
 
+
+function replaceZeroWithBlank() {
+  const table = document.getElementById('COPO_Output_Table');
+  if (!table) return;
+
+  table.querySelectorAll('td, th').forEach(cell => {
+    const text = cell.textContent.trim();
+
+    // replaces 0, 0.00, 0%, 0.00%
+    if (/^0(\.0+)?%?$/.test(text)) {
+      cell.textContent = '-';
+    }
+  });
+}
+
+// Call AFTER the table is fully rendered
+replaceZeroWithBlank();
 
 
