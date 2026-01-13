@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>CO–PO Statistics</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    table { border-collapse: collapse; margin-top: 20px }
+    th, td { border: 1px solid #999; padding: 6px 10px; text-align: center }
+    th { background: #eee }
+td {
+  vertical-align: top;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+  </style>
+</head>
+<body>
+
+<h2>Year & Branch-wise CO–PO Statistics</h2>
+
+<input type="file" id="file" accept=".xlsx,.xls" />
+
+<div id="report"></div>
+
+<script src="stats.js"></script>
+</body>
+</html>
