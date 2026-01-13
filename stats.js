@@ -56,16 +56,26 @@ function parseExcel(binary) {
 }
 
 /* ========= GROUP BY YEAR + BRANCH ========= */
+/* ========= GROUP BY YEAR + BRANCH + CODE ========= */
 function generateStats(data) {
   const groups = {};
 
   data.forEach(row => {
-    const year = row[COL.YEAR];
+    const year   = row[COL.YEAR];
     const branch = row[COL.BRANCH];
-    if (!year || !branch) return;
+    const code   = row[COL.CODE];
 
-    const key = `${year}__${branch}`;
-    groups[key] ??= { year, branch, rows: [] };
+    if (!year || !branch || !code) return;
+
+    const key = `${year}__${branch}__${code}`;
+
+    groups[key] ??= {
+      year,
+      branch,
+      code,
+      rows: []
+    };
+
     groups[key].rows.push(row);
   });
 
@@ -97,7 +107,7 @@ function render(groups) {
         <th>Year</th>
         <th>Branch</th>
         <th>Section(s)</th>
-        <th>Code(s)</th>
+        <th>Code</th>
         <th>Faculty</th>
   `;
 
@@ -112,7 +122,8 @@ function render(groups) {
     const s = calculate(g);
 
     const sections = verticalList(uniqueList(g.rows, COL.SECTION));
-    const codes    = verticalList(uniqueList(g.rows, COL.CODE));
+    const code = g.code;
+
     const faculty  = verticalList(uniqueList(g.rows, COL.FACULTY));
 
     html += `
@@ -120,7 +131,7 @@ function render(groups) {
         <td>${g.year}</td>
         <td>${g.branch}</td>
         <td>${sections}</td>
-        <td>${codes}</td>
+       <td>${code}</td>
         <td>${faculty}</td>
     `;
 
