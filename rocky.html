@@ -70,17 +70,18 @@ fetch(csvUrl)
     });
 
     tableData = parsed.data.map(row => {
-      const allFields = Object.values(row);
-      const description = allFields.slice(3).join(", ") || row["Description"] || "";
+  const rawDate = row["Date"] || "";
+  const description = Object.values(row).slice(3).join(", ") || "";
 
-      return {
-        sl: row["Sl No"] || "",
-        date: row["Date"] || "",
-        type: row["Type"] || "",
-        description: description,
-        year: row["Date"] ? new Date(row["Date"]).getFullYear() : ""
-      };
-    });
+  return {
+    sl: row["Sl No"] || "",
+    date: rawDate,
+    type: row["Type"] || "",
+    description: description,
+    year: rawDate ? rawDate.split("/")[2] : ""
+  };
+});
+
 
     populateTypeFilter();
     populateYearFilter();
