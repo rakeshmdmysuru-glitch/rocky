@@ -240,6 +240,17 @@ html, body {
 
 <canvas id="poChart" width="800" height="400"></canvas>
 
+<label>Target Percentage:
+  <input type="number" id="targetInput" value="60" min="0" max="100">
+</label>
+<button onclick="generateGapAnalysis()">Generate Gap Analysis</button>
+
+<div id="gapTableWrap"></div>
+
+<button onclick="generateTargetChart()">Generate Target Chart</button>
+<div id="targetChartWrap">
+  <canvas id="targetChart" width="900" height="350"></canvas>
+</div>
 
 <button onclick="printAll()">Print</button>
 

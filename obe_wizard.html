@@ -460,6 +460,19 @@ function goToStep(step) {
   <button onclick="nextStep()">Next →</button>
 </div>
 
+
+<label>Target Percentage:
+  <input type="number" id="targetInput" value="60" min="0" max="100">
+</label>
+<button onclick="generateGapAnalysis()">Generate Gap Analysis</button>
+
+<div id="gapTableWrap"></div>
+
+<button onclick="generateTargetChart()">Generate Target Chart</button>
+<div id="targetChartWrap">
+  <canvas id="targetChart" width="900" height="350"></canvas>
+</div>
+
 <button onclick="printAll()">Print</button>
  <button id="resetAll" style="margin-left:12px; background:#f66; color:#fff">Reset All</button>
 </div>

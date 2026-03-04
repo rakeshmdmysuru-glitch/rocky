@@ -1,3 +1,10 @@
+let globalLabels = [];
+let globalCie = [];
+let globalSee = [];
+let globalFinalVals = [];
+let coChartInstance = null;
+let targetChartInstance = null;
+
 
 /* =========================
    Config & utility
@@ -628,6 +635,10 @@ function computeAndRender() {
 
 
 function renderTable(labels, cie, see, directPercent, indirectScore, indirectPercent, finalVals) {
+globalLabels = labels;
+  globalCie = cie;
+  globalSee = see;
+  globalFinalVals = finalVals;
   let html = `<table><thead><tr>
     <th>CO</th>
     <th>CIE (%)</th>
@@ -1089,6 +1100,10 @@ function printAll() {
 const chartCanvas1 = document.getElementById("coChart");
   const chartImage1 = chartCanvas1 ? chartCanvas1.toDataURL("image/png") : "";
 
+const chartCanvas2 = document.getElementById("targetChart");
+  const chartImage2 = chartCanvas2 ? chartCanvas2.toDataURL("image/png") : "";
+
+
 
   const elementsToPrint = [
     `<img src="jssstu_header.jpg" style="width:100%; display:block; margin:auto;" />`,
@@ -1115,7 +1130,13 @@ const chartCanvas1 = document.getElementById("coChart");
     "PAGEBREAK",
     buildFooterCourseInfo(),
     `<h2 class="section-title">CO-PO Attainment Chart</h2>`,
-    `<img src="${chartImage}" style="width:100%; max-width:900px; display:block; margin:auto;" />`
+    `<img src="${chartImage}" style="width:100%; max-width:900px; display:block; margin:auto;" />`,
+    "PAGEBREAK",
+    `<h2 class="section-title">Gap Analysis</h2>`,
+    cloneElementHTML(document.getElementById("gapTableWrap"), true),
+ `<h2 class="section-title">Gap Analysis Chart</h2>`,
+    `<img src="${chartImage2}" style="width:100%; max-width:900px; display:block; margin:auto;" />`
+
   ];
 
   let printContents = "";
@@ -1480,3 +1501,144 @@ function replaceZeroWithBlank() {
 replaceZeroWithBlank();
 
 
+
+
+
+
+
+
+
+
+
+
+function generateGapAnalysis() {
+
+  const target = parseFloat(document.getElementById("targetInput").value);
+
+  if (!globalLabels || globalLabels.length === 0) {
+    alert("Please generate results first.");
+    return;
+  }
+
+  let html = `<table>
+    <thead>
+      <tr>
+        <th>CO</th>
+        <th>CIE (%)</th>
+        <th>SEE (%)</th>
+        <th>Gap (Yes/No)</th>
+        <th>Reason</th>
+        <th>Action Taken</th>
+        <th>Outcome</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  for (let i = 0; i < globalLabels.length; i++) {
+
+    let cieVal = parseFloat(globalCie[i]);
+    let seeVal = parseFloat(globalSee[i]);
+
+    let gap = "No";
+    let reason = "-";
+    let action = "-";
+    let outcome = "Target Achieved";
+
+    // 🔎 Case 1: Both below target
+    if (cieVal < target && seeVal < target) {
+      gap = "Yes";
+      reason = "CIE and SEE below target";
+      action = "Remedial classes, assignments, practice tests";
+      outcome = "Improvement Required";
+    }
+
+    // 🔎 Case 2: CIE below, SEE attained
+    else if (cieVal < target && seeVal >= target) {
+      gap = "Yes";
+      reason = "Gap identified in CIE";
+      action = "Academic support provided before SEE";
+      outcome = "Attained in SEE";
+    }
+
+    // 🔎 Case 3: SEE below, CIE attained
+    else if (cieVal >= target && seeVal < target) {
+      gap = "Yes";
+      reason = "Gap identified in SEE";
+      action = "Exam strategy improvement required";
+      outcome = "Improvement Required in SEE";
+    }
+
+    html += `<tr>
+      <td>${globalLabels[i]}</td>
+      <td>${cieVal}</td>
+      <td>${seeVal}</td>
+      <td>${gap}</td>
+      <td>${reason}</td>
+      <td>${action}</td>
+      <td>${outcome}</td>
+    </tr>`;
+  }
+
+  html += `</tbody></table>`;
+
+  document.getElementById("gapTableWrap").innerHTML = html;
+}
+
+function generateTargetChart() {
+
+  const target = parseFloat(document.getElementById("targetInput").value);
+
+  if (!globalLabels || globalLabels.length === 0) {
+    alert("Generate results first.");
+    return;
+  }
+
+  const ctx = document.getElementById("targetChart").getContext("2d");
+
+  // ✅ Destroy old chart safely
+  if (targetChartInstance) {
+    targetChartInstance.destroy();
+    targetChartInstance = null;
+  }
+
+  const targetArray = globalLabels.map(() => target);
+
+  targetChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: globalLabels,
+      datasets: [
+        {
+          label: 'Target (%)',
+          data: targetArray,
+          backgroundColor: 'rgba(255,99,132,0.6)'
+        },
+        {
+          label: 'CIE (%)',
+          data: globalCie,
+          backgroundColor: 'rgba(54,162,235,0.6)'
+        },
+        {
+          label: 'SEE (%)',
+          data: globalSee,
+          backgroundColor: 'rgba(255,206,86,0.6)'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      }
+    }
+  });
+}
