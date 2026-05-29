@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dynamic CSV Table with Bootstrap</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  /* Make Description column take more space */
+  table#activity-table th.description,
+  table#activity-table td.description {
+    width: 60%;
+    word-wrap: break-word;
+  }
+  table#activity-table th,
+  table#activity-table td {
+    vertical-align: top;
+  }
+</style>
+</head>
+<body class="p-4">
+
+<div class="container">
+<!-- Biography Section -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <div class="row align-items-center">
+      
+      <div class="col-md-3 text-center">
+       <img id="profilePhoto"
+     src="https://drive.google.com/uc?export=view&id=1m4NIl6m2Ex7KR1BJCh2nDTuvmytBTZCh"
+     class="img-fluid rounded-circle border"
+     alt="Profile Photo">
+      </div>
+
+      <div class="col-md-9">
+        <h3 id="profileName">Prof. Rakesh M D</h3>
+        <p id="profileDesignation" class="text-muted">
+          Assistant Professor
+        </p>
+
+        <p id="profileBio">
+          Brief biography will appear dynamically here.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <h2 class="mb-4">Academic Activities</h2>
+
+  <div class="row mb-3 g-2">
+    <div class="col-md-3">
+      <select id="typeFilter" class="form-select">
+        <option value="">All Types</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="yearFilter" class="form-select">
+        <option value="">All Years</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <input type="text" id="searchFilter" class="form-control" placeholder="Search Description">
+    </div>
+  </div>
+<!-- Statistics -->
+<div class="row mb-4" id="statsContainer"></div>
+<div class="card mb-4">
+  <div class="card-body">
+    <h4 class="mb-3">Year-wise Academic Activities</h4>
+    <canvas id="yearChart"></canvas>
+  </div>
+</div>
+  <div class="table-responsive">
+    <table id="activity-table" class="table table-bordered table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th style="width:5%;">Sl No</th>
+          <th style="width:15%;">Date</th>
+          <th style="width:15%;">Type</th>
+          <th class="description">Description</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuqqWiO_Inm0kKaFXpskmLv8DtSvBM61iO_SKX8HdqYEBBWGASGeNMJfG6rFJFpQ/pub?output=csv";
+
+let tableData = [];
+
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(csvText => {
+
+    const parsed = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true
+    });
+
+    tableData = parsed.data.map(row => {
+
+      const rawDate = row["Date"] || "";
+      const description = Object.values(row).slice(3).join(", ");
+
+      let year = "";
+
+      // Extract year safely
+      if (rawDate.includes("/")) {
+        year = rawDate.split("/")[2];
+      }
+
+      return {
+        sl: row["Sl No"] || "",
+        date: rawDate,
+        type: row["Type"] || "",
+        description: description || "",
+        year: year
+      };
+    });
+
+    populateTypeFilter();
+    populateYearFilter();
+
+    renderTable();
+    renderStats();
+    renderChart();
+
+    loadBiography();
+  });
+
+const tbody = document.querySelector("#activity-table tbody");
+const typeFilter = document.getElementById("typeFilter");
+const yearFilter = document.getElementById("yearFilter");
+const searchFilter = document.getElementById("searchFilter");
+
+
+// ================= TABLE =================
+
+function renderTable() {
+
+  const typeVal = typeFilter.value.toLowerCase();
+  const yearVal = yearFilter.value;
+  const searchVal = searchFilter.value.toLowerCase();
+
+  tbody.innerHTML = "";
+
+  tableData.forEach(row => {
+
+    if (
+      (typeVal === "" || row.type.toLowerCase() === typeVal) &&
+      (yearVal === "" || row.year === yearVal) &&
+      (searchVal === "" || row.description.toLowerCase().includes(searchVal))
+    ) {
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${row.sl}</td>
+        <td>${row.date}</td>
+        <td>${row.type}</td>
+        <td class="description">${row.description}</td>
+      `;
+
+      tbody.appendChild(tr);
+    }
+  });
+}
+
+
+// ================= FILTERS =================
+
+function populateTypeFilter() {
+
+  const types = [...new Set(tableData.map(r => r.type))].sort();
+
+  types.forEach(t => {
+
+    if (t) {
+
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+
+      typeFilter.appendChild(opt);
+    }
+  });
+}
+
+function populateYearFilter() {
+
+  const years = [...new Set(tableData.map(r => r.year))]
+    .sort((a,b) => b-a);
+
+  years.forEach(y => {
+
+    if (y) {
+
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+
+      yearFilter.appendChild(opt);
+    }
+  });
+}
+
+
+// ================= STATISTICS =================
+
+function renderStats() {
+
+  const statsContainer = document.getElementById("statsContainer");
+
+  const counts = {};
+
+  tableData.forEach(row => {
+
+    const type = row.type.trim();
+
+    if (!counts[type]) {
+      counts[type] = 0;
+    }
+
+    counts[type]++;
+  });
+
+  statsContainer.innerHTML = "";
+
+  Object.keys(counts).forEach(type => {
+
+    statsContainer.innerHTML += `
+      <div class="col-md-3 mb-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <h5>${type}</h5>
+            <h2>${counts[type]}</h2>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+
+// ================= CHART =================
+
+function renderChart() {
+
+  const yearlyData = {};
+
+  tableData.forEach(row => {
+
+    if (!yearlyData[row.year]) {
+      yearlyData[row.year] = {};
+    }
+
+    if (!yearlyData[row.year][row.type]) {
+      yearlyData[row.year][row.type] = 0;
+    }
+
+    yearlyData[row.year][row.type]++;
+  });
+
+  const years = Object.keys(yearlyData).sort();
+
+  const types = [...new Set(tableData.map(r => r.type))];
+
+  const datasets = types.map(type => {
+
+    return {
+      label: type,
+      data: years.map(year =>
+        yearlyData[year][type] || 0
+      ),
+      borderWidth: 2
+    };
+  });
+
+  new Chart(document.getElementById("yearChart"), {
+    type: "bar",
+    data: {
+      labels: years,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Year-wise Activities"
+        }
+      }
+    }
+  });
+}
+
+
+// ================= BIOGRAPHY =================
+
+function loadBiography() {
+
+  // You can load this from another CSV later
+
+  document.getElementById("profileName").innerText =
+    "Prof. Rakesh M D";
+
+  document.getElementById("profileDesignation").innerText =
+    "Assistant Professor, Department of Electroncis and Communication Engineering, SJCE, JSS Science and Technology University, Mysuru";
+
+  document.getElementById("profileBio").innerText =
+    "Prof. Rakesh M D has published research articles in reputed journals and actively participates in conferences, FDPs, workshops, and academic collaborations.";
+
+document.getElementById("profilePhoto").src =
+  "https://drive.google.com/uc?export=view&id=1m4NIl6m2Ex7KR1BJCh2nDTuvmytBTZCh";}
+
+
+// ================= EVENTS =================
+
+typeFilter.addEventListener("change", renderTable);
+
+yearFilter.addEventListener("change", renderTable);
+
+searchFilter.addEventListener("input", renderTable);
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
