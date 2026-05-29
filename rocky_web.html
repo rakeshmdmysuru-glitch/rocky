@@ -352,15 +352,83 @@ function loadBiography(){
         "Prof. Rakesh M D";
 
     document.getElementById("profileDesignation").innerText =
-        "Assistant Professor, Department of Electroncis and Communication Engineering, SJCE, JSS Science and Technology University, Mysuru";
+        "Assistant Professor, Department of Electronics and Communication Engineering, SJCE, JSS Science and Technology University, Mysuru";
 
-    document.getElementById("profileBio").innerText =
-        "Prof. Rakesh M D is actively involved in academic research, journal publications, conferences, FDPs, workshops, and professional development activities.";
-
-    // GOOGLE DRIVE DIRECT IMAGE LINK
+    // GOOGLE DRIVE PHOTO
 
     document.getElementById("profilePhoto").src =
         "https://drive.google.com/thumbnail?id=1m4NIl6m2Ex7KR1BJCh2nDTuvmytBTZCh&sz=w1000";
+
+
+    // ===== AI STYLE BIO GENERATION =====
+
+    const totalActivities =
+        tableData.length;
+
+    const counts = {};
+
+    const years = [];
+
+    tableData.forEach(row => {
+
+        const type =
+            row.type.trim();
+
+        if(!counts[type]){
+            counts[type] = 0;
+        }
+
+        counts[type]++;
+
+        if(row.year){
+            years.push(parseInt(row.year));
+        }
+
+    });
+
+    const latestYear =
+        Math.max(...years);
+
+    const earliestYear =
+        Math.min(...years);
+
+    const journalCount =
+        counts["Journal"] || 0;
+
+    const conferenceCount =
+        counts["Conference"] || 0;
+
+    const workshopCount =
+        counts["Workshop"] || 0;
+
+    const fdpCount =
+        counts["FDP"] || 0;
+
+    // DYNAMIC AI-LIKE BIO
+
+    let bioText = `
+
+        Prof. Rakesh M D is actively engaged in academic,
+        research, and professional development activities
+        in the field of Electronics and Communication Engineering.
+
+        With ${totalActivities} documented academic contributions
+        between ${earliestYear} and ${latestYear},
+
+        the profile includes
+        ${journalCount} journal publications,
+        ${conferenceCount} conference activities,
+        ${workshopCount} workshops,
+        and ${fdpCount} Faculty Development Programs.
+
+        His academic interests include research dissemination,
+        technical learning, collaborative activities,
+        and continuous professional advancement.
+
+    `;
+
+    document.getElementById("profileBio").innerText =
+        bioText.replace(/\s+/g, " ").trim();
 
 }
 function updateDynamicSummary(data){
