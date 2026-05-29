@@ -65,16 +65,30 @@ table#activity-table td {
                 <div class="col-md-9">
 
                     <h2 id="profileName">
-                        Dr. Your Name
+                        Prof. Rakesh M D
                     </h2>
 
                     <h5 id="profileDesignation" class="text-muted">
-                        Associate Professor
+                        Assistant Professor
                     </h5>
 
-                    <p id="profileBio" class="mt-3">
-                        Brief biography appears here.
-                    </p>
+                 <!-- Dynamic Brief Summary -->
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <h4 class="mb-3">
+            Brief Academic Summary
+        </h4>
+
+        <p id="dynamicSummary" class="mb-0">
+            Loading summary...
+        </p>
+
+    </div>
+
+</div>
 
                 </div>
 
@@ -310,13 +324,13 @@ fetch(csvUrl)
 function loadBiography(){
 
     document.getElementById("profileName").innerText =
-        "Dr. Your Name";
+        "Prof. Rakesh M D";
 
     document.getElementById("profileDesignation").innerText =
-        "Associate Professor, Department of Computer Science";
+        "Assistant Professor, Department of Electroncis and Communication Engineering, SJCE, JSS Science and Technology University, Mysuru";
 
     document.getElementById("profileBio").innerText =
-        "Dr. Your Name is actively involved in academic research, journal publications, conferences, FDPs, workshops, and professional development activities.";
+        "Prof. Rakesh M D is actively involved in academic research, journal publications, conferences, FDPs, workshops, and professional development activities.";
 
     // GOOGLE DRIVE DIRECT IMAGE LINK
 
@@ -324,7 +338,65 @@ function loadBiography(){
         "https://drive.google.com/thumbnail?id=1m4NIl6m2Ex7KR1BJCh2nDTuvmytBTZCh&sz=w1000";
 
 }
+function updateDynamicSummary(data){
 
+    const total =
+        data.length;
+
+    const counts = {};
+
+    data.forEach(row => {
+
+        const type =
+            row.type.trim();
+
+        if(!counts[type]){
+            counts[type] = 0;
+        }
+
+        counts[type]++;
+
+    });
+
+    let summaryText = "";
+
+    if(total === 0){
+
+        summaryText =
+            "No academic activities found.";
+
+    }
+    else{
+
+        summaryText =
+            `A total of ${total} academic activities are available`;
+
+        const parts = [];
+
+        Object.keys(counts)
+
+        .sort()
+
+        .forEach(type => {
+
+            parts.push(
+                `${counts[type]} ${type}`
+            );
+
+        });
+
+        summaryText +=
+            ", including " +
+            parts.join(", ") +
+            ".";
+
+    }
+
+    document.getElementById(
+        "dynamicSummary"
+    ).innerText = summaryText;
+
+}
 
 // ================= FILTERS =================
 
@@ -451,6 +523,7 @@ function renderTable(){
     });
 
     renderStatistics(filteredData);
+    updateDynamicSummary(filteredData);
 
 }
 
