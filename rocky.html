@@ -72,7 +72,11 @@ fetch(csvUrl)
   
 tableData = parsed.data.map(row => {
   const rawDate = row["Date"] || "";
-  const description = row["Description"] || "";
+  const description = Object.entries(row)
+  .filter(([key]) => !["Sl No", "Date", "Type"].includes(key))
+  .map(([, value]) => value || "")
+  .filter(value => value.trim() !== "")
+  .join(", ");
 
   return {
     sl: row["Sl No"] || "",
