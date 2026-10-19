@@ -69,15 +69,16 @@ fetch(csvUrl)
       quoteChar: '"'
     });
 
-    tableData = parsed.data.map(row => {
+  
+tableData = parsed.data.map(row => {
   const rawDate = row["Date"] || "";
-  const description = Object.values(row).slice(3).join(", ") || "";
+  const description = row["Description"] || "";
 
   return {
     sl: row["Sl No"] || "",
     date: rawDate,
     type: row["Type"] || "",
-    description: description,
+    description: description.trim(),
     year: rawDate ? rawDate.split("/")[2] : ""
   };
 });
